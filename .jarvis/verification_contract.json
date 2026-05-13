@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0.0",
+  "workspace": "productivity-game",
+  "generated_on": "2026-05-13",
+  "verification_policy": {
+    "delivery_path": "branch -> pull request -> CI checks -> reviewed merge",
+    "do_not_claim_done_without": [
+      "named commands",
+      "observed pass/fail results",
+      "documented residual risks for blocked gates"
+    ],
+    "quality_ratchet": "new hardening must be additive, rollbackable, and documented"
+  },
+  "environment": {
+    "node": "20 in CI; local baseline observed on v18.19.1",
+    "package_manager": "npm",
+    "install_command": "npm ci --no-audit --fund=false",
+    "env_file_source": "default process env only"
+  },
+  "required_gates": [
+    {
+      "name": "deterministic install",
+      "command": "npm ci --no-audit --fund=false",
+      "required_for": [
+        "pull_request",
+        "release"
+      ],
+      "current_status": "passing"
+    },
+    {
+      "name": "web export build",
+      "command": "npm run build:web",
+      "required_for": [
+        "pull_request",
+        "release"
+      ],
+      "current_status": "passing"
+    },
+    {
+      "name": "release bundle creation",
+      "command": "tar -czf release-bundle-web.tgz dist",
+      "required_for": [
+        "release"
+      ],
+      "current_status": "passing after build"
+    }
+  ],
+  "advisory_gates": [
+    {
+      "name": "TypeScript no-emit check",
+      "command": "npx tsc --noEmit",
+      "promotion_condition": "passes on main without suppressing real data-shape issues",
+      "current_status": "failing on existing calendar and habit record shape errors"
+    },
+    {
+      "name": "Expo lint",
+      "command": "npm run lint",
+      "promotion_condition": "ESLint dependencies and config are committed and npm-based",
+      "current_status": "blocked because Expo CLI tries to install ESLint through missing yarnpkg"
+    },
+    {
+      "name": "automated test suite",
+      "command": "npm test",
+      "promotion_condition": "a real test script exists and covers critical user journeys",
+      "current_status": "missing test script"
+    }
+  ],
+  "release_gates": {
+    "pre_merge": [
+      "GitHub Actions CI / Web build and release bundle passes",
+      "PR includes evidence for any skipped advisory gate",
+      "rollback note is present for release-impacting changes"
+    ],
+    "pre_deploy": [
+      "release bundle artifact is created from CI",
+      "required EXPO_PUBLIC_* environment variables are present in the target runtime",
+      "target runtime can serve the artifact",
+      "rollback target points to previous successful release"
+    ],
+    "post_deploy": [
+      "GET /health when the target runtime exposes it",
+      "GET / returns the web shell",
+      "manual or automated smoke covers sign-in entry, task view, habit creation path, calendar view, and leaderboard view where credentials permit"
+    ]
+  },
+  "known_blockers": [
+    "No blocking automated regression test suite exists.",
+    "TypeScript check fails on pre-existing CalendarEvent and Habit data-shape casts.",
+    "Lint is not deterministic because ESLint dependencies/config are not committed.",
+    "Shadow smoke cannot validate authenticated Firebase and Google Calendar journeys without credentials.",
+    "Service restart validation is not applicable until a concrete target service and restart command are documented."
+  ]
+}

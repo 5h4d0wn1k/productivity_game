@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0.0",
+  "workspace": "productivity-game",
+  "generated_on": "2026-05-13",
+  "profile": "production_grade_os",
+  "maturity": {
+    "current": "discovered",
+    "estimated_percent": 9,
+    "target": "self_improving",
+    "next_threshold": "release_ready"
+  },
+  "repository": {
+    "default_branch": "main",
+    "delivery_model": "branch_pr_checks",
+    "direct_push_policy": "avoid for normal code, config, workflow, and release changes",
+    "mutable_scope": "repo-local",
+    "tracked_lockfiles": [
+      "package-lock.json",
+      "yarn.lock",
+      "yarn copy.lock"
+    ],
+    "canonical_install": "npm ci --no-audit --fund=false"
+  },
+  "runtime": {
+    "application": "Expo Router productivity app",
+    "platforms": [
+      "web",
+      "ios",
+      "android"
+    ],
+    "primary_release_artifact": "dist web export",
+    "build_command": "npm run build:web",
+    "node_version_for_ci": "20"
+  },
+  "ci_cd": {
+    "provider": "GitHub Actions",
+    "workflow": ".github/workflows/ci.yml",
+    "blocking_gates": [
+      "npm ci --no-audit --fund=false",
+      "npm run build:web",
+      "tar -czf release-bundle-web.tgz dist"
+    ],
+    "advisory_gates": [
+      "npx tsc --noEmit",
+      "npm run lint",
+      "npm test when a real test script exists"
+    ],
+    "branch_protection_recommendations": [
+      "require pull request before merging to main",
+      "require CI / Web build and release bundle",
+      "require at least one human review for release-impacting changes",
+      "dismiss stale approvals when workflow, dependency, or deploy files change"
+    ]
+  },
+  "deploy": {
+    "runtime_target": "cynik",
+    "env_file_source": "default process env only",
+    "required_public_environment": [
+      "EXPO_PUBLIC_FIREBASE_API_KEY",
+      "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN",
+      "EXPO_PUBLIC_FIREBASE_PROJECT_ID",
+      "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET",
+      "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
+      "EXPO_PUBLIC_FIREBASE_APP_ID",
+      "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID",
+      "EXPO_PUBLIC_FIREBASE_DATABASE_URL",
+      "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID"
+    ],
+    "healthcheck_path": "/health",
+    "rollback_target": "previous_release",
+    "rollback_strategy": "re-promote previous successful web artifact or revert the PR that introduced the regression",
+    "live_deploy_mutation": "not allowed from this baseline hardening node"
+  },
+  "risk_register": [
+    {
+      "risk": "No automated test script exists.",
+      "impact": "CI cannot prove task, habit, auth, calendar, or leaderboard behavior beyond build success.",
+      "next_action": "Add focused tests around critical user journeys before feature expansion."
+    },
+    {
+      "risk": "TypeScript currently reports existing data-shape errors.",
+      "impact": "Runtime data assumptions for calendar events and habits are not fully type-safe.",
+      "next_action": "Fix or explicitly normalize Realtime Database records before making typecheck blocking."
+    },
+    {
+      "risk": "Expo lint is not configured as a deterministic npm gate.",
+      "impact": "The lint script currently attempts interactive dependency setup through yarnpkg.",
+      "next_action": "Add ESLint dependencies/config through npm and promote lint to a blocking CI gate."
+    },
+    {
+      "risk": "The deploy healthcheck path is contracted but not locally verified.",
+      "impact": "A live release may pass artifact build while failing service health checks.",
+      "next_action": "Implement or map /health in the target runtime, then add smoke verification."
+    }
+  ]
+}

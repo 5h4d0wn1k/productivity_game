@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0.0",
+  "workspace": "productivity-game",
+  "mode": "advisory_first_pr_first",
+  "primary_guidance": "AGENTS.md",
+  "verification_contract": ".jarvis/verification_contract.json",
+  "production_grade_profile": ".jarvis/production_grade_profile.json",
+  "deploy_contract": ".jarvis/deploy_contract.json",
+  "rules": [
+    ".codex/rules/release-readiness.md"
+  ],
+  "hooks": {
+    "preflight": "bash .codex/hooks/preflight.sh"
+  },
+  "default_commands": {
+    "install": "npm ci --no-audit --fund=false",
+    "build": "npm run build:web",
+    "bundle": "tar -czf release-bundle-web.tgz dist"
+  },
+  "known_blocked_commands": {
+    "typecheck": "npx tsc --noEmit",
+    "lint": "npm run lint",
+    "test": "npm test"
+  }
+}
