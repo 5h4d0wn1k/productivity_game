@@ -56,7 +56,7 @@
       "name": "repo operating system self-check",
       "command": "node .codex/scripts/repo_operating_system_report.js --check",
       "required_for": ["operating_system_handoff"],
-      "current_status": "passing with warnings for missing test script, dirty tree, and missing upstream"
+      "current_status": "passing with warning for missing test script"
     }
   ],
   "advisory_gates": [
@@ -104,8 +104,7 @@
     "The canonical /health deploy path is documented but not implemented or locally verified in the static web export.",
     "Authenticated Firebase and Google Calendar journey smoke checks require credentials and target environment access.",
     "Bridge self-test is blocked because this repository does not define a bridge self-test command; the available bridge binary is the Linux network utility.",
-    "Service restart validation is not applicable until a concrete target service and restart command are documented.",
-    "Branch harden/release-readiness-node-0255b3ca01be has no upstream configured, so hosted PR/check evidence is still pending."
+    "Service restart validation is not applicable until a concrete target service and restart command are documented."
   ],
   "last_local_evidence": [
     "git ls-remote confirmed on 2026-05-24 that actions/checkout v6, actions/setup-node v6, and actions/upload-artifact v7 tags exist upstream.",
@@ -126,14 +125,20 @@
     "npm audit --audit-level=critical failed with 55 vulnerabilities, including 3 critical.",
     "test -f dist/index.html && test -f dist/metadata.json passed.",
     "Static shadow smoke served dist locally on port 18765 on 2026-05-24: GET / returned 200 and GET /health returned 404.",
-    "node .codex/scripts/repo_operating_system_report.js --check passed on 2026-05-24 and warned about the missing test script, dirty tree, and missing upstream.",
-    "Deploy tooling check found cynik, operatorctl, firebase, and eas missing in this environment; gh is present but this node did not push or open a PR.",
+    "node .codex/scripts/repo_operating_system_report.js --check passed on 2026-05-24; after branch publication its only warning was the missing test script.",
+    "Commit a25aeea54b9a1bff72afe0932d79655a7f18ad74 packaged the release-readiness hardening diff on branch harden/release-readiness-node-0255b3ca01be.",
+    "git push -u origin harden/release-readiness-node-0255b3ca01be passed and configured the upstream branch.",
+    "Draft PR #1 opened at https://github.com/5h4d0wn1k/productivity_game/pull/1 against main.",
+    "Hosted CI run 26349062007 passed on PR #1: Web build and release bundle succeeded, and Advisory regression probes succeeded with audit configured continue-on-error.",
+    "GitGuardian Security Checks, Vercel status, and Vercel Preview Comments reported success on PR #1; Vercel preview is not the contracted cynik deploy target.",
+    "Deploy tooling check found cynik, operatorctl, firebase, and eas missing in this environment; gh was present and used for PR delivery only.",
     "Deploy credential marker check found CYNIK_DEPLOY_TOKEN, FIREBASE_TOKEN, and EXPO_TOKEN absent.",
     "Bridge self-test was not available; bridge -V identified /usr/sbin/bridge as Linux bridge utility 6.1.0.",
     "Product-specific systemd inventory found no productivity-game or productivity-app service unit, so service restart validation was not applicable and no service was restarted.",
-    "git rev-parse --abbrev-ref --symbolic-full-name @{u} failed because the current branch has no upstream configured.",
-    "git status --short --branch remained intentionally dirty with 17 tracked modifications and 13 untracked paths after verification; hosted PR/check evidence is pending a reviewed commit, push, and PR.",
+    "git rev-parse --abbrev-ref --symbolic-full-name @{u} returned origin/harden/release-readiness-node-0255b3ca01be after push.",
+    "git status --short --branch was clean after commit and push.",
     "git diff --numstat -- package.json package-lock.json yarn.lock showed package/lock churn from deterministic lint setup, including a tracked yarn.lock diff that needs reviewer attention.",
+    ".codex/scripts/repo_operating_system_report.js is now the repo-local operating-system report and preflight self-check.",
     "Rollback target confirmed as previous_release in .jarvis/deploy_contract.json and .jarvis/production_grade_profile.json."
   ]
 }
