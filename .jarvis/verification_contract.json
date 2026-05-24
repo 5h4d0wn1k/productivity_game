@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": 1,
   "workspace": "productivity-game",
-  "generated_on": "2026-05-13",
+  "generated_on": "2026-05-24",
   "verification_policy": {
     "delivery_path": "branch -> pull request -> CI checks -> reviewed merge",
     "do_not_claim_done_without": [
@@ -15,64 +15,79 @@
     "node": "20 in CI; local baseline observed on v18.19.1",
     "package_manager": "npm",
     "install_command": "npm ci --no-audit --fund=false",
-    "env_file_source": "default process env only"
+    "env_file_source": "default process env only",
+    "notes": [
+      "package-lock.json is the canonical CI lockfile.",
+      "yarn.lock and yarn copy.lock are still tracked and must not be rewritten without a separate package-manager migration plan."
+    ]
   },
   "required_gates": [
     {
       "name": "deterministic install",
       "command": "npm ci --no-audit --fund=false",
-      "required_for": [
-        "pull_request",
-        "release"
-      ],
+      "required_for": ["pull_request", "release"],
+      "current_status": "passing"
+    },
+    {
+      "name": "lint",
+      "command": "npm run lint",
+      "required_for": ["pull_request", "release"],
+      "current_status": "passing with warnings"
+    },
+    {
+      "name": "TypeScript no-emit check",
+      "command": "npm run typecheck",
+      "required_for": ["pull_request", "release"],
       "current_status": "passing"
     },
     {
       "name": "web export build",
       "command": "npm run build:web",
-      "required_for": [
-        "pull_request",
-        "release"
-      ],
+      "required_for": ["pull_request", "release"],
       "current_status": "passing"
     },
     {
       "name": "release bundle creation",
       "command": "tar -czf release-bundle-web.tgz dist",
-      "required_for": [
-        "release"
-      ],
+      "required_for": ["release"],
       "current_status": "passing after build"
+    },
+    {
+      "name": "repo operating system self-check",
+      "command": "node .codex/scripts/repo_operating_system_report.js --check",
+      "required_for": ["operating_system_handoff"],
+      "current_status": "passing with warnings for missing test script, dirty tree, and missing upstream"
     }
   ],
   "advisory_gates": [
-    {
-      "name": "TypeScript no-emit check",
-      "command": "npx tsc --noEmit",
-      "promotion_condition": "passes on main without suppressing real data-shape issues",
-      "current_status": "failing on existing calendar and habit record shape errors"
-    },
-    {
-      "name": "Expo lint",
-      "command": "npm run lint",
-      "promotion_condition": "ESLint dependencies and config are committed and npm-based",
-      "current_status": "blocked because Expo CLI tries to install ESLint through missing yarnpkg"
-    },
     {
       "name": "automated test suite",
       "command": "npm test",
       "promotion_condition": "a real test script exists and covers critical user journeys",
       "current_status": "missing test script"
+    },
+    {
+      "name": "dependency audit",
+      "command": "npm audit --audit-level=critical",
+      "promotion_condition": "known findings are triaged and remediation is validated without breaking Expo/Firebase runtime behavior",
+      "current_status": "failing with 55 vulnerabilities, including 3 critical"
+    },
+    {
+      "name": "credentialed smoke",
+      "command": "staging sign-in, task create/complete, habit create, calendar event create, and /health check",
+      "promotion_condition": "staging or shadow target and credentials are configured",
+      "current_status": "blocked by missing deploy target and credentials"
     }
   ],
   "release_gates": {
     "pre_merge": [
       "GitHub Actions CI / Web build and release bundle passes",
+      "Release Bundle workflow is available for manually building reviewed release candidates",
       "PR includes evidence for any skipped advisory gate",
       "rollback note is present for release-impacting changes"
     ],
     "pre_deploy": [
-      "release bundle artifact is created from CI",
+      "release bundle artifact is created from CI or .github/workflows/release.yml",
       "required EXPO_PUBLIC_* environment variables are present in the target runtime",
       "target runtime can serve the artifact",
       "rollback target points to previous successful release"
@@ -80,14 +95,45 @@
     "post_deploy": [
       "GET /health when the target runtime exposes it",
       "GET / returns the web shell",
-      "manual or automated smoke covers sign-in entry, task view, habit creation path, calendar view, and leaderboard view where credentials permit"
+      "manual or automated smoke covers sign-in entry, first task completion, habit creation, calendar view, and leaderboard view where credentials permit"
     ]
   },
   "known_blockers": [
     "No blocking automated regression test suite exists.",
-    "TypeScript check fails on pre-existing CalendarEvent and Habit data-shape casts.",
-    "Lint is not deterministic because ESLint dependencies/config are not committed.",
-    "Shadow smoke cannot validate authenticated Firebase and Google Calendar journeys without credentials.",
-    "Service restart validation is not applicable until a concrete target service and restart command are documented."
+    "Dependency audit reports known vulnerabilities that need separate triage before audit can become blocking.",
+    "The canonical /health deploy path is documented but not implemented or locally verified in the static web export.",
+    "Authenticated Firebase and Google Calendar journey smoke checks require credentials and target environment access.",
+    "Bridge self-test is blocked because this repository does not define a bridge self-test command; the available bridge binary is the Linux network utility.",
+    "Service restart validation is not applicable until a concrete target service and restart command are documented.",
+    "Branch harden/release-readiness-node-0255b3ca01be has no upstream configured, so hosted PR/check evidence is still pending."
+  ],
+  "last_local_evidence": [
+    "git ls-remote confirmed on 2026-05-24 that actions/checkout v6, actions/setup-node v6, and actions/upload-artifact v7 tags exist upstream.",
+    "docs/ops/wip-quarantine-node-075359a7d791.md records the pre-edit dirty worktree inventory for node-075359a7d791, preserving visibility into prior WIP before further hardening evidence was added.",
+    "docs/ops/wip-quarantine-node-19a00efabc63.md records the retry-node dirty worktree inventory for node-19a00efabc63 before additional verification and handoff updates.",
+    "git diff --check passed.",
+    "npm ci --no-audit --fund=false passed on 2026-05-24 with local Node v18.19.1/npm 9.2.0 and an EBADENGINE warning for eslint-visitor-keys@5.0.1; CI uses Node 20.",
+    "bash -n .codex/hooks/preflight.sh and bash .codex/hooks/preflight.sh passed, including required production profile, agile work item, and deploy contract validation.",
+    "JSON parse check passed for package.json, package-lock.json, .codex/config.json, .jarvis/production_grade_profile.json, .jarvis/verification_contract.json, .jarvis/agile_work_item.json, and .jarvis/deploy_contract.json.",
+    "YAML parse check passed for .github/workflows/ci.yml and .github/workflows/release.yml using Node js-yaml.",
+    "Python syntax gate passed as not applicable; no Python files are tracked.",
+    "npm pkg get scripts.test returned {}, confirming no automated test script exists.",
+    "npm run lint passed with 0 errors and 23 warnings.",
+    "npm run typecheck passed.",
+    "npm run build:web passed and exported dist.",
+    "tar -czf release-bundle-web.tgz dist passed and produced a 2.1 MB bundle with 47 entries.",
+    "npm test failed because package.json has no test script.",
+    "npm audit --audit-level=critical failed with 55 vulnerabilities, including 3 critical.",
+    "test -f dist/index.html && test -f dist/metadata.json passed.",
+    "Static shadow smoke served dist locally on port 18765 on 2026-05-24: GET / returned 200 and GET /health returned 404.",
+    "node .codex/scripts/repo_operating_system_report.js --check passed on 2026-05-24 and warned about the missing test script, dirty tree, and missing upstream.",
+    "Deploy tooling check found cynik, operatorctl, firebase, and eas missing in this environment; gh is present but this node did not push or open a PR.",
+    "Deploy credential marker check found CYNIK_DEPLOY_TOKEN, FIREBASE_TOKEN, and EXPO_TOKEN absent.",
+    "Bridge self-test was not available; bridge -V identified /usr/sbin/bridge as Linux bridge utility 6.1.0.",
+    "Product-specific systemd inventory found no productivity-game or productivity-app service unit, so service restart validation was not applicable and no service was restarted.",
+    "git rev-parse --abbrev-ref --symbolic-full-name @{u} failed because the current branch has no upstream configured.",
+    "git status --short --branch remained intentionally dirty with 17 tracked modifications and 13 untracked paths after verification; hosted PR/check evidence is pending a reviewed commit, push, and PR.",
+    "git diff --numstat -- package.json package-lock.json yarn.lock showed package/lock churn from deterministic lint setup, including a tracked yarn.lock diff that needs reviewer attention.",
+    "Rollback target confirmed as previous_release in .jarvis/deploy_contract.json and .jarvis/production_grade_profile.json."
   ]
 }

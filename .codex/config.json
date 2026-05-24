@@ -4,22 +4,37 @@
   "mode": "advisory_first_pr_first",
   "primary_guidance": "AGENTS.md",
   "verification_contract": ".jarvis/verification_contract.json",
+  "agile_work_item_contract": ".jarvis/agile_work_item.json",
   "production_grade_profile": ".jarvis/production_grade_profile.json",
   "deploy_contract": ".jarvis/deploy_contract.json",
+  "release_workflow": ".github/workflows/release.yml",
   "rules": [
-    ".codex/rules/release-readiness.md"
+    ".codex/rules/release-readiness.md",
+    ".codex/rules/scope-and-evidence.md",
+    ".codex/rules/non-destructive-operations.md",
+    ".codex/rules/verification-and-release.md"
   ],
   "hooks": {
-    "preflight": "bash .codex/hooks/preflight.sh"
+    "preflight": "bash .codex/hooks/preflight.sh",
+    "preflight_checklist": ".codex/hooks/preflight.md",
+    "pre_handoff_checklist": ".codex/hooks/pre-handoff.md",
+    "mode": "advisory",
+    "auto_execute": false
   },
   "default_commands": {
     "install": "npm ci --no-audit --fund=false",
+    "lint": "npm run lint",
+    "typecheck": "npm run typecheck",
     "build": "npm run build:web",
-    "bundle": "tar -czf release-bundle-web.tgz dist"
+    "bundle": "tar -czf release-bundle-web.tgz dist",
+    "repo_operating_system_report": "node .codex/scripts/repo_operating_system_report.js",
+    "release_workflow": "gh workflow run release.yml"
   },
   "known_blocked_commands": {
-    "typecheck": "npx tsc --noEmit",
-    "lint": "npm run lint",
-    "test": "npm test"
+    "test": "npm test",
+    "bridge_self_test": "blocked because no repo bridge self-test command is documented; /usr/sbin/bridge is the Linux network utility",
+    "shadow_deploy": "blocked until deploy CLI and credentials are configured",
+    "credentialed_smoke": "blocked until Firebase, Google OAuth, and target runtime credentials are configured",
+    "service_restart": "not applicable until a repo-specific service unit is documented"
   }
 }

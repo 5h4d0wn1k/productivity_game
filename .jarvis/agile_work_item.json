@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "workspace": "productivity-game",
+  "generated_on": "2026-05-24",
+  "purpose": "Define the minimum ready/done contract for PR-sized product, app, CI, deploy, and operating-system changes.",
+  "delivery_model": "branch -> pull request -> checks -> review -> merge",
+  "scope_policy": {
+    "default_scope": "small, reviewable, rollbackable increments",
+    "protected_surfaces": [
+      "auth routing and AuthContext session hydration",
+      "Firebase configuration and persistence services",
+      "task completion and points flow",
+      "habit creation and streak display",
+      "calendar event creation and Google Calendar sync boundary",
+      "CI, deploy, rollback, verification policy, and repo-local AI guidance"
+    ],
+    "approval_required_for": [
+      "production dependency additions",
+      "package-manager migration or non-canonical lockfile rewrites",
+      "deployment target changes",
+      "live deploys, service restarts, secret rotation, or credentialed smoke against production",
+      "behavior changes to protected app surfaces outside the stated work item"
+    ]
+  },
+  "work_item_required_fields": [
+    {
+      "field": "problem",
+      "definition": "The customer, operator, or engineering problem being solved."
+    },
+    {
+      "field": "success_condition",
+      "definition": "The observable condition that proves the work item succeeded."
+    },
+    {
+      "field": "critical_user_journey",
+      "definition": "The user-visible workflow or operational path protected by the change."
+    },
+    {
+      "field": "affected_surfaces",
+      "definition": "Files, services, workflows, data contracts, or docs in scope."
+    },
+    {
+      "field": "verification_plan",
+      "definition": "Required and advisory checks from .jarvis/verification_contract.json, plus any focused smoke."
+    },
+    {
+      "field": "release_and_rollback",
+      "definition": "How the change is promoted, what aborts promotion, and how it is reverted or rolled back."
+    }
+  ],
+  "definition_of_ready": [
+    {
+      "name": "problem framed",
+      "evidence": "Target user or operator, current pain, and why now are written in the issue, PR, or docs/product/prfaq-template.md."
+    },
+    {
+      "name": "critical journey named",
+      "evidence": "The primary journey or operational flow is linked to docs/product/critical-user-journeys.md or explicitly marked not applicable."
+    },
+    {
+      "name": "scope bounded",
+      "evidence": "Owned files and protected surfaces are listed, with non-goals called out for adjacent behavior."
+    },
+    {
+      "name": "acceptance criteria testable",
+      "evidence": "At least one observable acceptance check is written in user, operator, or CI terms."
+    },
+    {
+      "name": "verification selected",
+      "evidence": "Required commands and any blocked smoke checks are selected from .jarvis/verification_contract.json before implementation."
+    },
+    {
+      "name": "rollback path known",
+      "evidence": "PR revert, artifact rollback, or previous_release promotion path is named before changing release-sensitive surfaces."
+    }
+  ],
+  "definition_of_done": [
+    {
+      "name": "implemented within scope",
+      "evidence": "Diff only touches the approved work-item surfaces or documents an approved scope expansion."
+    },
+    {
+      "name": "required gates executed",
+      "evidence": "Exact commands, pass/fail results, and blockers are recorded in the PR or release-readiness report."
+    },
+    {
+      "name": "behavior preserved or intentionally changed",
+      "evidence": "Protected auth, Firebase, task, habit, calendar, profile, rank, and leaderboard behavior is unchanged unless explicitly accepted."
+    },
+    {
+      "name": "release impact documented",
+      "evidence": "CI, deploy, rollback, or verification changes update docs/ops/release-readiness-report.md and related .jarvis contracts."
+    },
+    {
+      "name": "rollback remains available",
+      "evidence": "Guidance/config changes can be PR-reverted; runtime changes identify previous_release and smoke checks."
+    },
+    {
+      "name": "handoff complete",
+      "evidence": "Final report names changed files, verification evidence, deploy/smoke evidence, unresolved risks, and next safe step."
+    }
+  ],
+  "change_classes": [
+    {
+      "class": "docs_guidance_metadata",
+      "minimum_verification": [
+        "JSON/YAML/Markdown syntax where applicable",
+        "bash .codex/hooks/preflight.sh",
+        "git diff --check"
+      ],
+      "rollback": "revert the PR"
+    },
+    {
+      "class": "ci_cd_or_release_policy",
+      "minimum_verification": [
+        "YAML syntax",
+        "npm ci --no-audit --fund=false",
+        "npm run lint",
+        "npm run typecheck",
+        "npm run build:web",
+        "tar -czf release-bundle-web.tgz dist"
+      ],
+      "rollback": "revert the PR; do not deploy the candidate artifact"
+    },
+    {
+      "class": "app_runtime_behavior",
+      "minimum_verification": [
+        "npm run lint",
+        "npm run typecheck",
+        "npm run build:web",
+        "focused regression test or documented manual smoke for the touched critical journey"
+      ],
+      "rollback": "redeploy previous_release or revert the release PR, then check /health and rerun auth/task smoke where credentials permit"
+    }
+  ]
+}

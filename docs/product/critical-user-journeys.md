@@ -1,52 +1,84 @@
 # Critical User Journeys
 
-Status: baseline template
+Status: template
 Owner: TBD
-Last updated: 2026-05-13
+Last updated: 2026-05-24
 
-## Journey Inventory
+Use this file to keep product, engineering, release, and smoke tests aligned.
 
-1. Create an account or sign in.
-2. Create a task or habit that represents an intended behavior.
-3. Complete work and receive progress feedback through points, stats, or streaks.
-4. View calendar context and connect productivity work to scheduled time.
-5. Compare progress through profile and leaderboard views.
+## Journey inventory
 
-## Primary Journey: Turn An Intention Into Progress
+1. New user signs up or signs in and reaches the authenticated dashboard.
+2. Authenticated user creates a task.
+3. Authenticated user completes a task and sees progress reflected.
+4. Authenticated user creates a habit and sees it listed with frequency and streak state.
+5. Authenticated user creates a calendar event and sees it on the selected day.
+6. Authenticated user views rank, points, character stats, and leaderboard state.
 
-User-visible steps:
+## Primary journey: complete first task
 
-1. User signs in or creates an account.
-2. User opens the task or habit surface.
-3. User creates a task or habit with enough detail to act on it later.
-4. User returns and marks the work complete.
-5. App updates points, completion counts, streaks, character stats, or leaderboard position.
-6. User can see that progress persisted after refresh/reopen.
+### User-visible steps
 
-Completion condition:
+1. User opens the app.
+2. User signs in with email/password or Google.
+3. User lands on the dashboard.
+4. User opens Tasks.
+5. User creates a task with title, optional description, time, points, and due date.
+6. User marks the task complete.
+7. User returns to the dashboard and sees progress reflected through task state, points, rank, or stats.
 
-The user can create a meaningful task or habit, complete it, and see persisted progress feedback without manual recovery.
+### Completion condition
 
-## Failure-Sensitive Points
+The user can tell that the completed task was saved and that their progress changed.
 
-- Auth provider returns an error or missing profile record.
-- Firebase public environment variables are absent or mismatched.
-- Realtime Database records do not match UI TypeScript assumptions.
-- Calendar permission or Google sign-in scope fails.
-- Completion writes partially succeed across Firestore and Realtime Database.
-- Leaderboard or profile data becomes stale after completion.
+### Failure-sensitive points
 
-## Metrics And SLO Candidates
+- Firebase auth session is missing, stale, or not hydrated into `AuthContext`.
+- Firebase environment variables are missing or point to the wrong project.
+- Firestore and Realtime Database writes diverge.
+- Task date filtering hides the task unexpectedly.
+- Points, completed task count, rank, or character stats do not update consistently.
+- UI shows success before persistence succeeds.
 
-- Activation: percentage of signed-up users who create and complete one task or habit within 24 hours.
-- Retention: percentage of activated users who return and complete work on day 2 and day 7.
-- Reliability: successful task or habit completion writes divided by attempted completions.
-- Latency: p95 time from completion tap to visible progress update under 1 second for already-loaded views.
-- Data correctness: zero known cases where completed work is lost or double-counted.
+### Metrics and SLO candidates
 
-## Rollout And Fallback Considerations
+- Activation: new users who complete one task in the first session.
+- Task creation success rate: target 99% for authenticated users in healthy dependency conditions.
+- Task completion success rate: target 99% for authenticated users in healthy dependency conditions.
+- Dashboard load time after auth: target p95 under 2 seconds on broadband for web.
+- Error budget signal: auth, task create, task update, and dashboard load errors.
 
-- Keep auth and local navigation smoke tests separate from authenticated Firebase write smoke.
-- Release task/habit changes behind the smallest practical surface area and verify persistence before promoting.
-- If leaderboard or calendar integrations regress, preserve core task/habit completion as the fallback journey.
-- For any data-shape migration, define read compatibility and rollback before writing new records.
+### Smoke checks
+
+- Sign in with a staging Firebase user.
+- Create a uniquely named task.
+- Complete the task.
+- Confirm the task is no longer shown as active and progress state changed.
+- Confirm no unhandled errors appear in console logs.
+
+## Secondary journeys
+
+### Create a habit
+
+- Create a daily, weekly, or monthly habit.
+- Confirm the habit appears in the list with frequency and streak state.
+- Failure modes: unauthenticated user, write failure, stale list, incomplete complete-habit implementation.
+
+### Create a calendar event
+
+- Select a date.
+- Create an event with title, start, and end.
+- Confirm the event appears on the selected day.
+- Failure modes: missing title, invalid date conversion, Firestore index/query failure, Google Calendar scope confusion.
+
+### View leaderboard and rank
+
+- Load profile, rank, points, stats, and leaderboard.
+- Confirm empty states are clear when data is missing.
+- Failure modes: Firestore/Realtime Database divergence, rank defaults masking data failure, slow queries.
+
+## Rollout and fallback considerations
+
+- Release UI and docs changes through PR checks before deployment.
+- Use a staging or shadow Firebase project for credentialed smoke checks when available.
+- If task completion, auth, or persistence regress after release, roll back to the previous known-good release and rerun the primary journey smoke check before promotion.

@@ -35,6 +35,12 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --fund=false
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
       - name: Build web export
         run: npm run build:web
 
@@ -67,14 +73,6 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --fund=false
 
-      - name: TypeScript check
-        continue-on-error: true
-        run: npx tsc --noEmit
-
-      - name: Expo lint
-        continue-on-error: true
-        run: npm run lint
-
       - name: Automated test suite
         run: |
           if npm run | grep -qE '^  test$'; then
@@ -82,3 +80,7 @@ jobs:
           else
             echo "::warning::No test script is defined yet; regression coverage is advisory until a real test suite is added."
           fi
+
+      - name: Audit critical vulnerabilities
+        continue-on-error: true
+        run: npm audit --audit-level=critical

@@ -1,11 +1,11 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": 1,
   "workspace": "productivity-game",
-  "generated_on": "2026-05-13",
+  "generated_on": "2026-05-24",
   "profile": "production_grade_os",
   "maturity": {
-    "current": "discovered",
-    "estimated_percent": 9,
+    "current": "self_checking_baseline",
+    "estimated_percent": 45,
     "target": "self_improving",
     "next_threshold": "release_ready"
   },
@@ -23,11 +23,7 @@
   },
   "runtime": {
     "application": "Expo Router productivity app",
-    "platforms": [
-      "web",
-      "ios",
-      "android"
-    ],
+    "platforms": ["web", "ios", "android"],
     "primary_release_artifact": "dist web export",
     "build_command": "npm run build:web",
     "node_version_for_ci": "20"
@@ -35,19 +31,23 @@
   "ci_cd": {
     "provider": "GitHub Actions",
     "workflow": ".github/workflows/ci.yml",
+    "release_workflow": ".github/workflows/release.yml",
     "blocking_gates": [
       "npm ci --no-audit --fund=false",
+      "npm run lint",
+      "npm run typecheck",
       "npm run build:web",
       "tar -czf release-bundle-web.tgz dist"
     ],
     "advisory_gates": [
-      "npx tsc --noEmit",
-      "npm run lint",
-      "npm test when a real test script exists"
+      "npm test when a real test script exists",
+      "npm audit --audit-level=critical",
+      "credentialed shadow smoke when target and credentials are configured"
     ],
     "branch_protection_recommendations": [
       "require pull request before merging to main",
       "require CI / Web build and release bundle",
+      "run the Release Bundle workflow for release candidates",
       "require at least one human review for release-impacting changes",
       "dismiss stale approvals when workflow, dependency, or deploy files change"
     ]
@@ -55,6 +55,8 @@
   "deploy": {
     "runtime_target": "cynik",
     "env_file_source": "default process env only",
+    "deploy_contract": ".jarvis/deploy_contract.json",
+    "runbook": "docs/deployment/deploy-and-rollback.md",
     "required_public_environment": [
       "EXPO_PUBLIC_FIREBASE_API_KEY",
       "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN",
@@ -71,26 +73,119 @@
     "rollback_strategy": "re-promote previous successful web artifact or revert the PR that introduced the regression",
     "live_deploy_mutation": "not allowed from this baseline hardening node"
   },
+  "product": {
+    "brief_path": "docs/product/prfaq-template.md",
+    "critical_user_journeys_path": "docs/product/critical-user-journeys.md",
+    "primary_journey": "sign in, create a task, complete it, and see persisted progress feedback"
+  },
+  "agile": {
+    "work_item_contract": ".jarvis/agile_work_item.json",
+    "problem_brief_template": "docs/product/prfaq-template.md",
+    "planning_model": "PR-sized increments with explicit problem framing before major feature or release-policy work",
+    "definition_of_ready": [
+      "target user and customer problem are named",
+      "critical user journey and failure modes are documented",
+      "affected protected surfaces and rollout boundary are named",
+      "acceptance criteria, verification expectations, and rollback path are written"
+    ],
+    "definition_of_done": [
+      "changes are delivered through branch -> PR -> checks -> reviewed merge",
+      "required gates in .jarvis/verification_contract.json pass or have documented blockers",
+      "release-readiness notes are updated for CI, deploy, rollback, or verification changes",
+      "residual risks and follow-up owners are recorded"
+    ],
+    "cadence": {
+      "backlog_review": "before major feature work",
+      "release_review": "before promoting a web artifact",
+      "retro_trigger": "after failed release gates, rollback, or repeated advisory-gate failures"
+    },
+    "tracking_artifacts": [
+      "docs/product/prfaq-template.md",
+      "docs/product/critical-user-journeys.md",
+      ".jarvis/agile_work_item.json",
+      "docs/ops/release-readiness-report.md",
+      "docs/ops/wip-quarantine-node-075359a7d791.md",
+      "docs/ops/wip-quarantine-node-19a00efabc63.md"
+    ]
+  },
+  "architecture": {
+    "risk_class": "medium",
+    "sensitive_change_review_required": true,
+    "protected_surfaces": [
+      "auth routing and AuthContext session hydration",
+      "Firebase configuration and persistence services",
+      "task completion and points flow",
+      "habit creation and streak display",
+      "calendar event creation and Google Calendar sync boundary",
+      "CI, deploy, rollback, and verification policy"
+    ],
+    "adr_policy": "Create an ADR before changing auth, persistence, deployment target, package manager, data model, or release automation behavior."
+  },
+  "verification": {
+    "install_command": "npm ci --no-audit --fund=false",
+    "lint_command": "npm run lint",
+    "typecheck_command": "npm run typecheck",
+    "build_command": "npm run build:web",
+    "bundle_command": "tar -czf release-bundle-web.tgz dist",
+    "test_command": "npm test",
+    "test_status": "blocked until package.json defines a real test script",
+    "contract_path": ".jarvis/verification_contract.json"
+  },
+  "release": {
+    "workflow": ".github/workflows/release.yml",
+    "artifact": "release-bundle-web.tgz",
+    "promotion_model": "reviewable artifact only; live deploy requires a separate reviewed integration",
+    "rollback_action": "re-promote previous successful web artifact or revert the release PR, then check /health and rerun available auth/task smoke checks"
+  },
+  "reliability": {
+    "healthcheck_path": "/health",
+    "healthcheck_status": "documented but not implemented or locally verified in the static web export",
+    "primary_smoke": "sign in, create a task, complete it, and verify persisted progress feedback",
+    "observability_gap": "no repo-local production metrics, alert, or dashboard contract is defined yet"
+  },
+  "ownership": {
+    "engineering_owner": "TBD",
+    "release_owner": "TBD",
+    "incident_owner": "TBD",
+    "handoff_report": "docs/ops/release-readiness-report.md"
+  },
+  "continuous_improvement": {
+    "maturity_report": "docs/ops/release-readiness-report.md",
+    "next_ratchet": [
+      "turn .jarvis/agile_work_item.json into issue and PR automation once the team agrees on required fields",
+      "add focused regression tests for auth, first task completion, habit creation, and calendar creation",
+      "triage critical dependency audit findings without changing runtime behavior casually",
+      "map or implement /health on the target runtime and add credentialed shadow smoke",
+      "clean lint warnings in behavior-preserving PRs",
+      "wire the repo-local operating-system report into CI once the advisory contract stabilizes"
+    ],
+    "ratchet_policy": "advisory-first, evidence-backed, rollbackable improvements only"
+  },
   "risk_register": [
     {
       "risk": "No automated test script exists.",
-      "impact": "CI cannot prove task, habit, auth, calendar, or leaderboard behavior beyond build success.",
+      "impact": "CI cannot prove task, habit, auth, calendar, or leaderboard behavior beyond lint, typecheck, and build.",
       "next_action": "Add focused tests around critical user journeys before feature expansion."
     },
     {
-      "risk": "TypeScript currently reports existing data-shape errors.",
-      "impact": "Runtime data assumptions for calendar events and habits are not fully type-safe.",
-      "next_action": "Fix or explicitly normalize Realtime Database records before making typecheck blocking."
+      "risk": "Dependency audit reports 55 known findings, including 3 critical.",
+      "impact": "Release owners cannot yet distinguish exploitable runtime risk from transitive build-tool risk.",
+      "next_action": "Triage audit findings and remediate through a separate dependency plan with build and smoke evidence."
     },
     {
-      "risk": "Expo lint is not configured as a deterministic npm gate.",
-      "impact": "The lint script currently attempts interactive dependency setup through yarnpkg.",
-      "next_action": "Add ESLint dependencies/config through npm and promote lint to a blocking CI gate."
+      "risk": "Lint passes but reports warnings.",
+      "impact": "Unused imports and hook dependency warnings remain visible regression debt.",
+      "next_action": "Clean warnings in small behavior-preserving PRs or document intentional hook dependency boundaries."
     },
     {
       "risk": "The deploy healthcheck path is contracted but not locally verified.",
       "impact": "A live release may pass artifact build while failing service health checks.",
       "next_action": "Implement or map /health in the target runtime, then add smoke verification."
+    },
+    {
+      "risk": "Release automation creates an artifact but intentionally does not perform live deploys.",
+      "impact": "A human or future deploy integration must promote artifacts and record target evidence.",
+      "next_action": "Add a credentialed shadow deploy workflow only after target CLI, credentials, health check, and rollback target are reviewed."
     }
   ]
 }

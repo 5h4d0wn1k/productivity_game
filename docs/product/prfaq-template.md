@@ -2,11 +2,13 @@
 
 Status: template
 Owner: TBD
-Last updated: 2026-05-13
+Last updated: 2026-05-24
 
 ## Product Summary
 
 Productivity Game helps people turn tasks and habits into a lightweight progression loop with points, character stats, calendar context, and social comparison.
+
+Working hypothesis: the first useful v1 is not a broad game system; it is a dependable loop where a user signs in, captures intended work, completes it, and sees persisted progress feedback.
 
 ## Target User
 
@@ -31,11 +33,11 @@ The first proof point will be:
 
 ### What customer problem are we solving?
 
-TBD.
+TBD. Start from the problem that people know what they need to do but lose momentum when tasks, habits, and calendar commitments are split across tools with weak feedback loops.
 
 ### What is the first critical user journey this must win?
 
-TBD. Start from `docs/product/critical-user-journeys.md`.
+TBD. The current candidate is: sign in, create a task, complete it, and see progress reflected in dashboard, points, rank, or character stats. Start from `docs/product/critical-user-journeys.md`.
 
 ### What metric proves this is working?
 
@@ -67,3 +69,4 @@ TBD. Prefer activation, retention, completed tasks per active user, habit streak
 - First critical user journey with failure modes:
 - Smoke test plan:
 - Rollback or feature-disable path:
+- Release verification gates from `.jarvis/verification_contract.json`:

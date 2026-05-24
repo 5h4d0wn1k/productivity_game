@@ -31,7 +31,7 @@ export default function HabitCreator() {
     try {
       setLoadingHabits(true);
       const userHabits = await getUserHabits(user!.uid);
-      setHabits(userHabits as Habit[]);
+      setHabits(userHabits as unknown as Habit[]);
     } catch (error) {
       console.error('Error loading habits:', error);
       Alert.alert('Error', 'Failed to load habits');

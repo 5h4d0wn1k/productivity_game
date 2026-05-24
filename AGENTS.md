@@ -1,67 +1,69 @@
-# AGENTS.md
+# Productivity Game Repo Instructions
 
-## Mission
+These instructions override broader defaults for this repository.
 
-This repo is an Expo Router productivity app with Firebase-backed auth, task, habit, calendar, profile, and leaderboard flows. Preserve working app behavior while improving release safety, verification evidence, and handoff quality.
+## Product and operating posture
 
-## Operating Guardrails
+- Treat this repository as a production-intended Expo/React Native app for gamified productivity.
+- Preserve existing auth, Firebase persistence, task, habit, calendar, profile, rank, and leaderboard behavior unless a request explicitly changes it.
+- Prefer small, reviewable hardening changes over broad rewrites.
+- Do not introduce production dependencies, rotate secrets, or change deployment targets without explicit approval.
+- Treat `package-lock.json` as the canonical CI lockfile. `yarn.lock` and `yarn copy.lock` are still tracked; do not rewrite them without an explicit package-manager migration plan.
 
-- Work on a branch and use a PR for normal code, config, workflow, and release changes.
-- Keep app-runtime changes separate from repo-operating-system hardening unless the task explicitly asks for both.
-- Do not commit secrets, `.env*` files, service account files, or Firebase private keys.
-- Treat `package-lock.json` as the canonical install lockfile for CI. The repo also currently tracks `yarn.lock` and `yarn copy.lock`; do not rewrite package management without an explicit migration plan.
-- Avoid `npm run clean` unless the user explicitly requests it. It removes `node_modules`, `.expo`, and `yarn.lock`.
-- Before claiming completion, report exact commands run and whether each passed, failed, or was blocked.
+## Repo-local AI operating contract
 
-## Verification Contract
+- Load this file first for every AI-assisted session, then apply the advisory `.codex` and `.jarvis` guidance.
+- Treat `.codex/config.json`, `.codex/rules/*.md`, `.codex/hooks/*.md`, `.jarvis/production_grade_profile.json`, `.jarvis/agile_work_item.json`, and `.jarvis/verification_contract.json` as repo-local operating guidance, not autonomous permission to change behavior.
+- Keep `.codex/hooks` advisory or validation-oriented. Do not add auto-executing hooks without explicit approval.
+- Start mutable work from read-only inventory: inspect branch state, existing policy files, package scripts, and affected docs/code before editing.
+- Keep writes inside the user's explicit scope. If the requested fix requires files outside scope, stop and ask for scope expansion.
+- Use branch -> PR -> checks as the default delivery path for code, config, workflow, or release-policy changes. Do not push directly to `main`.
+- Never run destructive commands such as `git reset --hard`, force-pushes, broad deletes, secret rotation, deploys, or service restarts unless the user explicitly requests that exact operation.
+- Do not read, print, rewrite, or commit secrets from `.env*`, Firebase, Google OAuth, Expo, or deployment configuration.
 
-Start with `.jarvis/verification_contract.json`.
+## Protected surfaces
 
-Required gates for PR/release-impacting changes:
+- `app/(auth)`: login, signup, and auth routing.
+- `app/contexts/AuthContext.tsx`: Firebase auth session state and profile hydration.
+- `app/config/firebase.ts`: environment-variable based Firebase and Google OAuth configuration.
+- `app/services`: Firebase, Realtime Database, and Google Calendar integration helpers.
+- `app/(tabs)/tasks.tsx`: task creation, filtering, completion, and points flow.
+- `app/(tabs)/habitCreator.tsx`: habit creation, frequency, and streak display.
+- `app/(tabs)/calendar.tsx`: event creation, date selection, and Google Calendar sync boundary.
+- `.github/workflows`: merge gates and release evidence.
+- `.jarvis`, `.codex`, and `docs`: operating contracts, planning templates, release readiness, and rollback policy.
 
-```bash
-npm ci --no-audit --fund=false
-npm run build:web
-```
+## Agile work item contract
 
-Release bundle gate after a successful build:
+- Use `.jarvis/agile_work_item.json` to define ready/done expectations for PR-sized product, app, CI, deploy, and operating-system changes.
+- A work item is ready when the problem, critical journey, affected surfaces, acceptance criteria, verification plan, and rollback path are explicit.
+- A work item is done when the scoped diff is implemented, required gates are run or blocked with evidence, release impact is documented, rollback remains available, and handoff notes name residual risk.
+- For major product work, update or reference `docs/product/prfaq-template.md` and `docs/product/critical-user-journeys.md` before implementation.
 
-```bash
-tar -czf release-bundle-web.tgz dist
-```
+## High-signal commands
 
-Advisory gates that should become blocking after their current blockers are fixed:
+- Install: `npm ci`
+- Develop: `npm run dev`
+- Lint: `npm run lint`
+- Typecheck: `npm run typecheck`
+- Web build: `npm run build:web`
+- Release bundle: `tar -czf release-bundle-web.tgz dist`
+- Repo operating-system report: `node .codex/scripts/repo_operating_system_report.js`
+- Reviewable release workflow: `.github/workflows/release.yml`
+- Dependency audit advisory: `npm audit --audit-level=critical`
 
-```bash
-npx tsc --noEmit
-npm run lint
-npm test
-```
+## Verification policy
 
-Current known blockers:
+- Follow `.jarvis/verification_contract.json` before claiming release readiness.
+- For docs or guidance-only changes, verify JSON/YAML/Markdown syntax where possible and run at least `npm run typecheck` and `npm run build:web` when app code or workflow confidence matters.
+- For app behavior changes, run `npm run lint`, `npm run typecheck`, and `npm run build:web`; add or update focused tests when a test harness exists.
+- For auth, Firebase, Google Calendar, deployment, workflow, or environment changes, treat the change as release-sensitive and document smoke coverage or why it is blocked.
+- If credentials are unavailable, say which smoke checks were blocked and which local gates still passed.
 
-- `npx tsc --noEmit` fails on existing calendar and habit data-shape casts.
-- `npm run lint` is not deterministic because Expo CLI tries to install missing ESLint packages through `yarnpkg`.
-- No `test` script exists yet.
-- `/health` is the canonical deploy healthcheck, but local static export smoke currently verifies `/` until the deploy target maps or implements `/health`.
+## Release and rollback
 
-## Deployment And Rollback
-
-The deploy contract lives at `.jarvis/deploy_contract.json`.
-
-- Build artifact: `dist`
-- Release bundle: `release-bundle-web.tgz`
-- Runtime target: `cynik`
-- Environment source: default process env only
-- Rollback target: previous successful release
-
-Do not mutate live services from an AI session unless the user explicitly authorizes that deploy operation and the rollback target has been confirmed.
-
-## Product Planning
-
-Before major feature work, update:
-
-- `docs/product/prfaq-template.md`
-- `docs/product/critical-user-journeys.md`
-
-Feature work should name the target user, expected product outcome, first critical user journey, rollout/smoke evidence, and rollback or fallback path.
+- CI must stay deterministic: install with `npm ci`, cache npm dependencies, and publish the Expo web release bundle for review.
+- `.github/workflows/release.yml` builds and uploads a release bundle only; it must not deploy live services without a reviewed deploy integration.
+- Rollback for guidance-only changes is a PR revert of the changed files.
+- Rollback for runtime changes is redeploying the previous known-good release, checking `/health`, and rerunning auth/task smoke checks when credentials permit.
+- Keep release-readiness notes in `docs/ops/release-readiness-report.md` current when changing CI, deploy, rollback, or verification policy.

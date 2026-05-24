@@ -1,12 +1,13 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": 1,
   "workspace": "productivity-game",
   "runtime_target": "cynik",
   "artifact": {
     "type": "static_web_export",
     "build_command": "npm run build:web",
     "output_directory": "dist",
-    "release_bundle": "release-bundle-web.tgz"
+    "release_bundle": "release-bundle-web.tgz",
+    "release_workflow": ".github/workflows/release.yml"
   },
   "environment": {
     "env_file_source": "default process env only",
@@ -29,7 +30,7 @@
     "status": "canonical /health must be implemented or mapped in the deployment target before it becomes a blocking smoke gate"
   },
   "rollout": {
-    "strategy": "PR-first artifact promotion",
+    "strategy": "PR-first artifact promotion; .github/workflows/release.yml builds a reviewable bundle but does not deploy live services",
     "change_window": "normal business hours until automated smoke and rollback are proven",
     "abort_conditions": [
       "artifact build fails",

@@ -100,7 +100,7 @@ export default function CalendarScreen() {
       endOfDay.setHours(23, 59, 59, 999);
 
       const fetchedEvents = await getUserEvents(user!.uid, startOfDay, endOfDay);
-      setEvents(fetchedEvents as CalendarEvent[]);
+      setEvents(fetchedEvents as unknown as CalendarEvent[]);
     } catch (error) {
       console.error('Error loading events:', error);
       Alert.alert('Error', 'Failed to load events');
