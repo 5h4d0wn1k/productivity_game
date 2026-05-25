@@ -10,3 +10,4 @@
 8. Update `.jarvis/verification_contract.json` when a gate is promoted, retired, or materially changes.
 9. Keep `.github/workflows/release.yml` as a bundle-producing workflow only until deploy credentials, target health checks, and rollback automation are reviewed.
 10. Use `node .codex/scripts/repo_operating_system_report.js` to refresh repo-local operating-system evidence before major handoffs.
+11. Keep `env_file_source` aligned across `.codex/config.json`, `.jarvis/deploy_contract.json`, `.jarvis/verification_contract.json`, and `.jarvis/production_grade_profile.json`; mismatches should fail preflight before release.

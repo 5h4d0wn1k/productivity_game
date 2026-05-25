@@ -110,6 +110,14 @@ if (profile) {
   }
 }
 
+const config = parsed['.codex/config.json'];
+if (config) {
+  const configEnvFileSource = config.environment && config.environment.env_file_source;
+  if (typeof configEnvFileSource !== 'string' || configEnvFileSource.length === 0) {
+    errors.push('.codex/config.json: missing "environment.env_file_source"');
+  }
+}
+
 const agile = parsed['.jarvis/agile_work_item.json'];
 if (agile) {
   for (const section of ['work_item_required_fields', 'definition_of_ready', 'definition_of_done', 'change_classes']) {
@@ -135,6 +143,22 @@ if (deploy) {
       errors.push(`.jarvis/deploy_contract.json: missing "${name}"`);
     }
   }
+}
+
+const verification = parsed['.jarvis/verification_contract.json'];
+const configEnvFileSource = config && config.environment && config.environment.env_file_source;
+const deployEnvFileSource = deploy && deploy.environment && deploy.environment.env_file_source;
+const verificationEnvFileSource = verification && verification.environment && verification.environment.env_file_source;
+const profileEnvFileSource = profile && profile.deploy && profile.deploy.env_file_source;
+const envSources = [
+  ['.codex/config.json environment.env_file_source', configEnvFileSource],
+  ['.jarvis/deploy_contract.json environment.env_file_source', deployEnvFileSource],
+  ['.jarvis/verification_contract.json environment.env_file_source', verificationEnvFileSource],
+  ['.jarvis/production_grade_profile.json deploy.env_file_source', profileEnvFileSource],
+].filter(([, value]) => typeof value === 'string' && value.length > 0);
+const uniqueEnvSources = Array.from(new Set(envSources.map(([, value]) => value)));
+if (envSources.length > 1 && uniqueEnvSources.length > 1) {
+  errors.push(`env_file_source mismatch across operating contracts: ${envSources.map(([name, value]) => `${name}="${value}"`).join('; ')}`);
 }
 
 if (fs.existsSync('.github/workflows/ci.yml')) {
@@ -201,6 +225,11 @@ console.log('## Verification Surface');
 console.log(`- package scripts: ${requiredPackageScripts.join(', ')}`);
 console.log('- CI gates: install, lint, typecheck, web build, release bundle, artifact upload');
 console.log('- Release workflow: reviewable bundle only; live deploy intentionally not configured');
+console.log('');
+console.log('## Environment Source');
+console.log(`- env_file_source: ${configEnvFileSource || deployEnvFileSource || 'unknown'}`);
+console.log(`- workspace config: ${configEnvFileSource || 'missing'}`);
+console.log(`- deploy contract: ${deployEnvFileSource || 'missing'}`);
 console.log('');
 console.log('## Git Hygiene');
 console.log(`- branch: ${branch}`);

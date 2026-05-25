@@ -1,7 +1,7 @@
 # Release Readiness Report
 
 Workspace: productivity-game
-Date: 2026-05-24
+Date: 2026-05-25
 Branch: harden/release-readiness-node-0255b3ca01be
 
 ## Snapshot
@@ -12,8 +12,8 @@ Branch: harden/release-readiness-node-0255b3ca01be
 - Verification contract: `.jarvis/verification_contract.json` records required, advisory, blocked, deploy, and rollback gates.
 - Production profile: `.jarvis/production_grade_profile.json` records maturity target, runtime, delivery path, agile operating posture, deploy assumptions, product docs, and risk register; maturity is now tracked as a self-checking baseline at 45%.
 - Agile work item contract: `.jarvis/agile_work_item.json` defines required work item fields, definition of ready, definition of done, verification expectations, and rollback expectations for PR-sized changes.
-- Deploy safety: `.jarvis/deploy_contract.json` records runtime target, env source, artifact, health, rollout, abort, and rollback posture.
-- AI operating guidance: `AGENTS.md`, `.codex/config.json`, `.codex/hooks/preflight.sh`, advisory checklist hooks, and `.codex/rules/*` provide repo-local guardrails.
+- Deploy safety: `.jarvis/deploy_contract.json` records runtime target, env source, artifact, health, rollout, abort, and rollback posture; `env_file_source` is now also documented in `.codex/config.json` and checked for consistency across operating contracts.
+- AI operating guidance: `AGENTS.md`, `.codex/config.json`, `.codex/hooks/preflight.sh`, advisory checklist hooks, and `.codex/rules/*` provide repo-local guardrails, including an explicit workspace environment-source contract.
 - Product planning: PRFAQ/problem framing and critical user journey templates exist under `docs/product`.
 - Dirty-worktree quarantine: `docs/ops/wip-quarantine-node-075359a7d791.md` and `docs/ops/wip-quarantine-node-19a00efabc63.md` record pre-edit dirty WIP inventories for the retry path.
 - Repo operating-system report: `.codex/scripts/repo_operating_system_report.js` now performs a dependency-free local artifact, JSON, workflow-token, package-script, git-hygiene, and maturity check; preflight invokes it in `--check` mode.
@@ -36,6 +36,7 @@ Branch: harden/release-readiness-node-0255b3ca01be
 - Added `npm run typecheck` and fixed two compile-time-only assertions in calendar and habit screens.
 - Added advisory security audit to CI without making known dependency findings block unrelated hardening.
 - Added deploy/rollback runbook under `docs/deployment`.
+- Added `environment.env_file_source` to `.codex/config.json` and enforce matching values across `.codex/config.json`, `.jarvis/deploy_contract.json`, `.jarvis/verification_contract.json`, and `.jarvis/production_grade_profile.json` in preflight and the repo operating-system report.
 - Added Markdown advisory hooks and durable `.codex/rules` for scope, evidence, non-destructive operations, verification, and release.
 - Added the missing `agile` section to the production-grade profile and preflight validation for required profile sections.
 - Added `.jarvis/agile_work_item.json` and wired it into AGENTS, preflight, PR review, and production profile guidance.
@@ -45,7 +46,33 @@ Branch: harden/release-readiness-node-0255b3ca01be
 
 ## Verification Evidence
 
-Current node evidence refreshed on 2026-05-24:
+Node `node-88a2eddb09d0` evidence refreshed on 2026-05-25:
+
+- `git status --short --branch` before editing: branch `harden/release-readiness-node-0255b3ca01be` tracking `origin/harden/release-readiness-node-0255b3ca01be` with no dirty paths.
+- `node --check .codex/scripts/repo_operating_system_report.js`: passed.
+- `bash -n .codex/hooks/preflight.sh`: passed.
+- JSON parse check for `package.json`, `package-lock.json`, `.codex/config.json`, `.jarvis/production_grade_profile.json`, `.jarvis/verification_contract.json`, `.jarvis/agile_work_item.json`, and `.jarvis/deploy_contract.json`: passed.
+- YAML parse check for `.github/workflows/ci.yml` and `.github/workflows/release.yml` using Node `js-yaml`: passed.
+- `git diff --check`: passed.
+- `py_files=$(git ls-files '*.py'); if [ -n "$py_files" ]; then python3 -m py_compile $py_files; else echo 'python syntax gate: no python files'; fi`: passed as not applicable; no Python files are tracked.
+- `bash .codex/hooks/preflight.sh`: passed; it now validates `env_file_source` consistency across workspace config, deploy contract, verification contract, and production profile.
+- `node .codex/scripts/repo_operating_system_report.js`: passed and reported `env_file_source: default process env only` for both workspace config and deploy contract.
+- `npm run lint`: passed with 0 errors and the existing 23 warnings.
+- `npm run typecheck`: passed.
+- `npm run build:web`: passed and exported `dist`.
+- `tar -czf release-bundle-web.tgz dist && tar -tzf release-bundle-web.tgz | wc -l && ls -lh release-bundle-web.tgz`: passed; bundle has 47 entries and is 2.1 MB.
+- `npm test`: failed because `package.json` has no `test` script.
+- `npm audit --audit-level=critical`: failed with 55 vulnerabilities, including 3 critical.
+- `test -f dist/index.html && test -f dist/metadata.json`: passed.
+- Bridge self-test discovery: `bridge -V` identified `/usr/sbin/bridge` as Linux bridge utility 6.1.0; no repo-local bridge self-test command is documented.
+- Deploy tooling check for `cynik`, `operatorctl`, `firebase`, and `eas`: all missing in this environment; `gh` is present.
+- Deploy credential marker check for `CYNIK_DEPLOY_TOKEN`, `FIREBASE_TOKEN`, and `EXPO_TOKEN`: absent; no secret values were read or printed.
+- Shadow deploy attempt: blocked because the `cynik` CLI and/or `CYNIK_DEPLOY_TOKEN` are unavailable.
+- Static shadow smoke with `python3 -m http.server 18766 --directory dist`: `GET /` returned 200 and `GET /health` returned 404.
+- Product-specific systemd inventory: no `productivity-game` or `productivity-app` service unit was found, so no service was restarted.
+- Rollback target check from `.jarvis/deploy_contract.json`: confirmed `rollback.target=previous_release` and mechanism `re-promote previous successful artifact or revert the release PR`.
+
+Previous branch and PR evidence from 2026-05-24:
 
 - `git ls-remote --tags https://github.com/actions/checkout.git refs/tags/v6`: confirmed `v6` exists.
 - `git ls-remote --tags https://github.com/actions/setup-node.git refs/tags/v6`: confirmed `v6` exists.

@@ -21,6 +21,12 @@
     "mode": "advisory",
     "auto_execute": false
   },
+  "environment": {
+    "env_file_source": "default process env only",
+    "source_of_truth": ".jarvis/deploy_contract.json",
+    "secret_policy": "Do not read, print, rewrite, or commit .env files or private credentials; public Expo variables are supplied by the target process environment.",
+    "required_public_variables_ref": ".jarvis/deploy_contract.json#environment.required_public_variables"
+  },
   "default_commands": {
     "install": "npm ci --no-audit --fund=false",
     "lint": "npm run lint",

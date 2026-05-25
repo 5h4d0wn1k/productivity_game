@@ -7,7 +7,9 @@ This runbook is advisory until a concrete deployment integration is wired into C
 - Runtime target: `cynik`
 - Health check: `/health`
 - Rollback target: `previous_release`
-- Environment source: default process environment unless a reviewed deploy contract says otherwise
+- Environment source: `default process env only`
+- Workspace environment source: `.codex/config.json` -> `environment.env_file_source`
+- Deploy contract environment source: `.jarvis/deploy_contract.json` -> `environment.env_file_source`
 - Build command: `npm run build:web`
 - Web artifact: `dist`
 - Reviewable release workflow: `.github/workflows/release.yml`

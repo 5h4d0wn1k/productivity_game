@@ -32,6 +32,12 @@ for (const file of ['.codex/config.json', '.jarvis/production_grade_profile.json
   JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
+const config = JSON.parse(fs.readFileSync('.codex/config.json', 'utf8'));
+const configEnvFileSource = config.environment && config.environment.env_file_source;
+if (typeof configEnvFileSource !== 'string' || configEnvFileSource.length === 0) {
+  throw new Error('config missing environment.env_file_source');
+}
+
 const profile = JSON.parse(fs.readFileSync('.jarvis/production_grade_profile.json', 'utf8'));
 const requiredProfileSections = [
   'workspace',
@@ -74,6 +80,18 @@ const missingDeployFields = requiredDeployFields
   .map(([name]) => name);
 if (missingDeployFields.length > 0) {
   throw new Error(`deploy_contract missing required field(s): ${missingDeployFields.join(', ')}`);
+}
+
+const verification = JSON.parse(fs.readFileSync('.jarvis/verification_contract.json', 'utf8'));
+const envSources = [
+  ['.codex/config.json environment.env_file_source', configEnvFileSource],
+  ['.jarvis/deploy_contract.json environment.env_file_source', deploy.environment && deploy.environment.env_file_source],
+  ['.jarvis/verification_contract.json environment.env_file_source', verification.environment && verification.environment.env_file_source],
+  ['.jarvis/production_grade_profile.json deploy.env_file_source', profile.deploy && profile.deploy.env_file_source],
+].filter(([, value]) => typeof value === 'string' && value.length > 0);
+const uniqueEnvSources = Array.from(new Set(envSources.map(([, value]) => value)));
+if (uniqueEnvSources.length > 1) {
+  throw new Error(`env_file_source mismatch across operating contracts: ${envSources.map(([name, value]) => `${name}="${value}"`).join('; ')}`);
 }
 NODE
 
