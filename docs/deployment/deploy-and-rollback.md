@@ -10,6 +10,7 @@ This runbook is advisory until a concrete deployment integration is wired into C
 - Environment source: `default process env only`
 - Workspace environment source: `.codex/config.json` -> `environment.env_file_source`
 - Deploy contract environment source: `.jarvis/deploy_contract.json` -> `environment.env_file_source`
+- Contract consistency gate: `bash .codex/hooks/preflight.sh` and `node .codex/scripts/repo_operating_system_report.js --check` validate that `env_file_source` is present and aligned across workspace, deploy, verification, and production-profile contracts.
 - Build command: `npm run build:web`
 - Web artifact: `dist`
 - Reviewable release workflow: `.github/workflows/release.yml`
