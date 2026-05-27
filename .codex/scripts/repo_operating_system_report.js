@@ -155,9 +155,15 @@ const envSources = [
   ['.jarvis/deploy_contract.json environment.env_file_source', deployEnvFileSource],
   ['.jarvis/verification_contract.json environment.env_file_source', verificationEnvFileSource],
   ['.jarvis/production_grade_profile.json deploy.env_file_source', profileEnvFileSource],
-].filter(([, value]) => typeof value === 'string' && value.length > 0);
+];
+const missingEnvSources = envSources
+  .filter(([, value]) => typeof value !== 'string' || value.length === 0)
+  .map(([name]) => name);
+if (missingEnvSources.length > 0) {
+  errors.push(`missing env_file_source in operating contract(s): ${missingEnvSources.join(', ')}`);
+}
 const uniqueEnvSources = Array.from(new Set(envSources.map(([, value]) => value)));
-if (envSources.length > 1 && uniqueEnvSources.length > 1) {
+if (uniqueEnvSources.length > 1) {
   errors.push(`env_file_source mismatch across operating contracts: ${envSources.map(([name, value]) => `${name}="${value}"`).join('; ')}`);
 }
 
@@ -230,6 +236,8 @@ console.log('## Environment Source');
 console.log(`- env_file_source: ${configEnvFileSource || deployEnvFileSource || 'unknown'}`);
 console.log(`- workspace config: ${configEnvFileSource || 'missing'}`);
 console.log(`- deploy contract: ${deployEnvFileSource || 'missing'}`);
+console.log(`- verification contract: ${verificationEnvFileSource || 'missing'}`);
+console.log(`- production profile: ${profileEnvFileSource || 'missing'}`);
 console.log('');
 console.log('## Git Hygiene');
 console.log(`- branch: ${branch}`);

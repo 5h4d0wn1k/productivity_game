@@ -38,6 +38,7 @@ Branch: harden/release-readiness-node-0255b3ca01be
 - Added advisory security audit to CI without making known dependency findings block unrelated hardening.
 - Added deploy/rollback runbook under `docs/deployment`.
 - Added `environment.env_file_source` to `.codex/config.json` and enforce matching values across `.codex/config.json`, `.jarvis/deploy_contract.json`, `.jarvis/verification_contract.json`, and `.jarvis/production_grade_profile.json` in preflight and the repo operating-system report.
+- Tightened the `env_file_source` self-check so missing values in any of the four operating contracts now fail preflight and `repo_operating_system_report.js --check`; the report output also prints workspace, deploy, verification, and production-profile sources separately.
 - Added Markdown advisory hooks and durable `.codex/rules` for scope, evidence, non-destructive operations, verification, and release.
 - Added the missing `agile` section to the production-grade profile and preflight validation for required profile sections.
 - Added `.jarvis/agile_work_item.json` and wired it into AGENTS, preflight, PR review, and production profile guidance.
@@ -51,15 +52,16 @@ Node `node-29a3ff39c370` evidence refreshed on 2026-05-27:
 
 - `git status --short --branch` before editing: branch `harden/release-readiness-node-0255b3ca01be` tracking `origin/harden/release-readiness-node-0255b3ca01be` with no dirty paths.
 - Read-only inventory confirmed existing operating artifacts: `AGENTS.md`, `.codex/config.json`, `.codex/hooks/*`, `.codex/rules/*`, `.jarvis/deploy_contract.json`, `.jarvis/verification_contract.json`, `.jarvis/agile_work_item.json`, `.jarvis/production_grade_profile.json`, `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `docs/deployment/deploy-and-rollback.md`, `docs/product/prfaq-template.md`, `docs/product/critical-user-journeys.md`, and this release-readiness report.
+- Hardening delta: `.codex/hooks/preflight.sh` and `.codex/scripts/repo_operating_system_report.js` now require `env_file_source` to be present in `.codex/config.json`, `.jarvis/deploy_contract.json`, `.jarvis/verification_contract.json`, and `.jarvis/production_grade_profile.json`, not only aligned when present.
 - `git diff --check`: passed.
 - `node --check .codex/scripts/repo_operating_system_report.js`: passed.
 - `bash -n .codex/hooks/preflight.sh`: passed.
 - JSON parse check for `package.json`, `package-lock.json`, `.codex/config.json`, `.jarvis/production_grade_profile.json`, `.jarvis/verification_contract.json`, `.jarvis/agile_work_item.json`, and `.jarvis/deploy_contract.json`: passed.
 - YAML parse check for `.github/workflows/ci.yml` and `.github/workflows/release.yml` using Node `js-yaml`: passed.
 - Python syntax gate with `py_files=$(git ls-files '*.py'); if [ -n "$py_files" ]; then python3 -m py_compile $py_files; else echo 'python syntax gate: no python files'; fi`: passed as not applicable; no Python files are tracked.
-- `bash .codex/hooks/preflight.sh`: passed; it validates required operating artifacts and `env_file_source` consistency across workspace config, deploy contract, verification contract, and production profile.
-- `node .codex/scripts/repo_operating_system_report.js --check`: passed; the only warning remains the missing test script.
-- `node .codex/scripts/repo_operating_system_report.js`: passed and reported all 14 required operating artifacts present, `env_file_source: default process env only` for both workspace config and deploy contract, clean git hygiene, upstream tracking, and maturity `self_checking_baseline (45%) -> self_improving`.
+- `bash .codex/hooks/preflight.sh`: passed; it validates required operating artifacts plus `env_file_source` presence and consistency across workspace config, deploy contract, verification contract, and production profile. During the uncommitted edit phase it warned that the working tree had 2 dirty paths, which were the intended script edits.
+- `node .codex/scripts/repo_operating_system_report.js --check`: passed; warnings were the missing test script and the intended temporary dirty paths.
+- `node .codex/scripts/repo_operating_system_report.js`: passed and reported all 14 required operating artifacts present, `env_file_source: default process env only` for workspace config, deploy contract, verification contract, and production profile; upstream tracking on `origin/harden/release-readiness-node-0255b3ca01be`; and maturity `self_checking_baseline (45%) -> self_improving`.
 - `npm ci --no-audit --fund=false`: passed on local Node v18.19.1/npm 9.2.0 with the known `EBADENGINE` warning for `eslint-visitor-keys@5.0.1`; CI remains configured for Node 20.
 - `npm run lint`: passed with 0 errors and the existing 23 warnings.
 - `npm run typecheck`: passed.

@@ -88,7 +88,13 @@ const envSources = [
   ['.jarvis/deploy_contract.json environment.env_file_source', deploy.environment && deploy.environment.env_file_source],
   ['.jarvis/verification_contract.json environment.env_file_source', verification.environment && verification.environment.env_file_source],
   ['.jarvis/production_grade_profile.json deploy.env_file_source', profile.deploy && profile.deploy.env_file_source],
-].filter(([, value]) => typeof value === 'string' && value.length > 0);
+];
+const missingEnvSources = envSources
+  .filter(([, value]) => typeof value !== 'string' || value.length === 0)
+  .map(([name]) => name);
+if (missingEnvSources.length > 0) {
+  throw new Error(`missing env_file_source in operating contract(s): ${missingEnvSources.join(', ')}`);
+}
 const uniqueEnvSources = Array.from(new Set(envSources.map(([, value]) => value)));
 if (uniqueEnvSources.length > 1) {
   throw new Error(`env_file_source mismatch across operating contracts: ${envSources.map(([name, value]) => `${name}="${value}"`).join('; ')}`);
