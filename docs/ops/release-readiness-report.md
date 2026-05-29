@@ -1,12 +1,13 @@
 # Release Readiness Report
 
 Workspace: productivity-game
-Date: 2026-05-28
+Date: 2026-05-29
 Branch: harden/release-readiness-node-0255b3ca01be
 
 ## Snapshot
 
-- Current retry node `node-c0fa602351f7`: revalidated the release-readiness baseline, confirmed the stale `env_file_source` warning is resolved in repo-local contracts, and added the environment-source rule directly to `AGENTS.md` so future AI sessions inherit it before consulting advisory `.codex` and `.jarvis` guidance.
+- Current retry node `node-b01413c3ad7e`: revalidated the release-readiness baseline, confirmed the stale `env_file_source` warning remains resolved in repo-local contracts, refreshed deploy/smoke evidence, and kept this pass to report-only documentation with no runtime behavior change.
+- Prior retry node `node-c0fa602351f7`: revalidated the release-readiness baseline and added the environment-source rule directly to `AGENTS.md` so future AI sessions inherit it before consulting advisory `.codex` and `.jarvis` guidance.
 - Git hygiene: work moved off `main` to branch `harden/release-readiness-node-0255b3ca01be`, was committed, pushed with upstream tracking, and opened as draft PR #1: https://github.com/5h4d0wn1k/productivity_game/pull/1.
 - Working tree: clean after committing and pushing the hardening diff. Prior node `node-075359a7d791` added `docs/ops/wip-quarantine-node-075359a7d791.md`, and retry node `node-19a00efabc63` added `docs/ops/wip-quarantine-node-19a00efabc63.md` as non-destructive evidence bundles.
 - CI/CD: `.github/workflows/ci.yml` now runs deterministic npm install, lint, typecheck, web export, release bundle creation, artifact upload, advisory test detection, and advisory dependency audit.
@@ -29,7 +30,7 @@ Branch: harden/release-readiness-node-0255b3ca01be
 5. Service restart validation is not applicable until a concrete target service and restart command are documented.
 6. `yarn.lock` is modified in this hardening PR while `package-lock.json` remains canonical; review this lockfile diff before merge and avoid turning it into an implicit package-manager migration.
 7. The repo-local operating-system report exists and runs in preflight, but it is not wired into hosted CI yet.
-8. This node opened a PR and hosted CI passed, but it did not deploy to the contracted `cynik` target, restart services, or run credentialed Firebase/Google smoke checks.
+8. Draft PR #1 remains open with hosted checks passing, but this repository still has no contracted `cynik` deploy execution, product-specific service restart target, or credentialed Firebase/Google smoke evidence.
 
 ## Safe Hardening Changes
 
@@ -47,8 +48,47 @@ Branch: harden/release-readiness-node-0255b3ca01be
 - Added `.codex/scripts/repo_operating_system_report.js` and wired it into preflight as a repo-local self-check for operating artifacts, JSON validity, workflow gates, package scripts, and git hygiene.
 - Updated product journey guidance around auth, first task completion, habits, calendar events, and progress feedback.
 - Added `docs/ops/wip-quarantine-node-075359a7d791.md` and `docs/ops/wip-quarantine-node-19a00efabc63.md` so existing dirty WIP remains visible before unrelated growth or PR packaging.
+- Refreshed this release-readiness report for `node-b01413c3ad7e` with current local verification, deploy blockage, smoke, service-restart, PR-check, and rollback evidence.
 
 ## Verification Evidence
+
+Node `node-b01413c3ad7e` evidence refreshed on 2026-05-29:
+
+- Resume inventory `git status --short --branch`: branch `harden/release-readiness-node-0255b3ca01be` tracking `origin/harden/release-readiness-node-0255b3ca01be` with one staged path, `docs/ops/release-readiness-report.md`, left from the lost callback retry. No app code, workflow, dependency, deploy target, service, or environment behavior was dirty.
+- `git diff --cached --stat`: one staged documentation change in `docs/ops/release-readiness-report.md`.
+- Read-only inventory confirmed existing operating artifacts: `AGENTS.md`, `.codex/config.json`, `.codex/hooks/*`, `.codex/rules/*`, `.jarvis/deploy_contract.json`, `.jarvis/verification_contract.json`, `.jarvis/agile_work_item.json`, `.jarvis/production_grade_profile.json`, `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `docs/deployment/deploy-and-rollback.md`, `docs/product/prfaq-template.md`, `docs/product/critical-user-journeys.md`, and this release-readiness report.
+- Hardening delta: documentation-only refresh to this report; no app code, workflow, dependency, deploy target, service, or environment behavior was changed.
+- `node --check .codex/scripts/repo_operating_system_report.js`: passed.
+- `bash -n .codex/hooks/preflight.sh`: passed.
+- `git diff --check` and `git diff --cached --check`: passed.
+- JSON parse check for `package.json`, `package-lock.json`, `.codex/config.json`, `.jarvis/production_grade_profile.json`, `.jarvis/verification_contract.json`, `.jarvis/agile_work_item.json`, and `.jarvis/deploy_contract.json`: passed.
+- YAML parse check for `.github/workflows/ci.yml` and `.github/workflows/release.yml` using Node `js-yaml`: passed.
+- Python syntax gate with `py_files=$(git ls-files '*.py'); if [ -n "$py_files" ]; then python3 -m py_compile $py_files; else echo 'python syntax gate: no python files'; fi`: passed as not applicable; no Python files are tracked.
+- `bash .codex/hooks/preflight.sh`: passed; it validates required operating artifacts plus `env_file_source` presence and consistency across workspace config, deploy contract, verification contract, and production profile.
+- `node .codex/scripts/repo_operating_system_report.js --check`: passed with the known warning that `package.json` has no test script.
+- `node .codex/scripts/repo_operating_system_report.js`: passed and reported all 14 required operating artifacts present, `env_file_source: default process env only` for workspace config, deploy contract, verification contract, and production profile, upstream tracking on `origin/harden/release-readiness-node-0255b3ca01be`, one dirty path from this report refresh, and maturity `self_checking_baseline (45%) -> self_improving`.
+- `npm ci --no-audit --fund=false`: passed on local Node v18.19.1/npm 9.2.0 with the known `EBADENGINE` warning for `eslint-visitor-keys@5.0.1`; CI remains configured for Node 20.
+- `npm run lint`: passed with 0 errors and the existing 23 warnings.
+- `npm run typecheck`: passed.
+- `npm pkg get scripts.test`: returned `{}`, confirming no automated test script exists.
+- `npm test`: failed because `package.json` has no `test` script.
+- `npm run build:web`: passed and exported `dist`.
+- `tar -czf release-bundle-web.tgz dist`: passed.
+- `tar -tzf release-bundle-web.tgz | wc -l`: passed and reported 47 bundle entries.
+- `ls -lh release-bundle-web.tgz`: passed and reported a 2.1 MB bundle.
+- `test -f dist/index.html` and `test -f dist/metadata.json`: passed.
+- `npm audit --audit-level=critical`: failed with 55 vulnerabilities, including 3 critical. Several fixes are available only through compatibility-sensitive updates such as an Expo major upgrade, so remediation remains a separate dependency hardening item.
+- Bridge self-test discovery: `bridge -V` identified `/usr/sbin/bridge` as Linux bridge utility 6.1.0; no repo-local bridge self-test command is documented.
+- Deploy tooling check for `cynik`, `operatorctl`, `firebase`, and `eas`: all missing in this environment; `gh` is present.
+- Deploy credential marker check for `CYNIK_DEPLOY_TOKEN`, `FIREBASE_TOKEN`, and `EXPO_TOKEN`: absent; no secret values were read or printed.
+- Shadow deploy attempt: blocked because the `cynik` CLI and deploy credentials are unavailable.
+- Static shadow smoke with `python3 -m http.server 18771 --directory dist`: `GET /` returned 200 and `GET /health` returned 404.
+- Product-specific systemd inventory with `systemctl list-units --all --type=service --no-legend | rg -i 'productivity-game|productivity-app|productivity'`: no matching service unit was found, so no service was restarted.
+- Rollback target check from `.jarvis/deploy_contract.json` and `.jarvis/production_grade_profile.json`: confirmed `rollback.target=previous_release`, rollback mechanism `re-promote previous successful artifact or revert the release PR`, and `environment.env_file_source=default process env only`.
+- PR delivery check with `gh pr view 1`: draft PR #1 remains open from `harden/release-readiness-node-0255b3ca01be` to `main`; hosted checks reported success for `Web build and release bundle`, `Advisory regression probes`, `GitGuardian Security Checks`, `Vercel`, and `Vercel Preview Comments`. Vercel preview remains outside the contracted `cynik` deploy target.
+- Final post-report `bash .codex/hooks/preflight.sh`: passed with expected warnings for missing `test` script and the single intentional dirty path `docs/ops/release-readiness-report.md`.
+- Final post-report `node .codex/scripts/repo_operating_system_report.js --check`: passed with the same expected warnings for missing `test` script and the single intentional dirty path.
+- Final `git status --short --branch`: branch `harden/release-readiness-node-0255b3ca01be` tracking `origin/harden/release-readiness-node-0255b3ca01be` with only `docs/ops/release-readiness-report.md` modified.
 
 Node `node-c0fa602351f7` evidence refreshed on 2026-05-28:
 
