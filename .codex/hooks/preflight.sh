@@ -33,7 +33,11 @@ for (const file of ['.codex/config.json', '.jarvis/production_grade_profile.json
 }
 
 const config = JSON.parse(fs.readFileSync('.codex/config.json', 'utf8'));
+const configRootEnvFileSource = config.env_file_source;
 const configEnvFileSource = config.environment && config.environment.env_file_source;
+if (typeof configRootEnvFileSource !== 'string' || configRootEnvFileSource.length === 0) {
+  throw new Error('config missing top-level env_file_source');
+}
 if (typeof configEnvFileSource !== 'string' || configEnvFileSource.length === 0) {
   throw new Error('config missing environment.env_file_source');
 }
@@ -67,6 +71,7 @@ for (const section of ['work_item_required_fields', 'definition_of_ready', 'defi
 
 const deploy = JSON.parse(fs.readFileSync('.jarvis/deploy_contract.json', 'utf8'));
 const requiredDeployFields = [
+  ['env_file_source', deploy.env_file_source],
   ['runtime_target', deploy.runtime_target],
   ['artifact.build_command', deploy.artifact && deploy.artifact.build_command],
   ['artifact.output_directory', deploy.artifact && deploy.artifact.output_directory],
@@ -84,7 +89,9 @@ if (missingDeployFields.length > 0) {
 
 const verification = JSON.parse(fs.readFileSync('.jarvis/verification_contract.json', 'utf8'));
 const envSources = [
+  ['.codex/config.json env_file_source', configRootEnvFileSource],
   ['.codex/config.json environment.env_file_source', configEnvFileSource],
+  ['.jarvis/deploy_contract.json env_file_source', deploy.env_file_source],
   ['.jarvis/deploy_contract.json environment.env_file_source', deploy.environment && deploy.environment.env_file_source],
   ['.jarvis/verification_contract.json environment.env_file_source', verification.environment && verification.environment.env_file_source],
   ['.jarvis/production_grade_profile.json deploy.env_file_source', profile.deploy && profile.deploy.env_file_source],

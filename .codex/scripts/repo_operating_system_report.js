@@ -112,7 +112,11 @@ if (profile) {
 
 const config = parsed['.codex/config.json'];
 if (config) {
+  const configRootEnvFileSource = config.env_file_source;
   const configEnvFileSource = config.environment && config.environment.env_file_source;
+  if (typeof configRootEnvFileSource !== 'string' || configRootEnvFileSource.length === 0) {
+    errors.push('.codex/config.json: missing top-level "env_file_source"');
+  }
   if (typeof configEnvFileSource !== 'string' || configEnvFileSource.length === 0) {
     errors.push('.codex/config.json: missing "environment.env_file_source"');
   }
@@ -130,6 +134,7 @@ if (agile) {
 const deploy = parsed['.jarvis/deploy_contract.json'];
 if (deploy) {
   const deployFields = [
+    ['env_file_source', deploy.env_file_source],
     ['runtime_target', deploy.runtime_target],
     ['artifact.build_command', deploy.artifact && deploy.artifact.build_command],
     ['artifact.output_directory', deploy.artifact && deploy.artifact.output_directory],
@@ -146,12 +151,16 @@ if (deploy) {
 }
 
 const verification = parsed['.jarvis/verification_contract.json'];
+const configRootEnvFileSource = config && config.env_file_source;
 const configEnvFileSource = config && config.environment && config.environment.env_file_source;
+const deployRootEnvFileSource = deploy && deploy.env_file_source;
 const deployEnvFileSource = deploy && deploy.environment && deploy.environment.env_file_source;
 const verificationEnvFileSource = verification && verification.environment && verification.environment.env_file_source;
 const profileEnvFileSource = profile && profile.deploy && profile.deploy.env_file_source;
 const envSources = [
+  ['.codex/config.json env_file_source', configRootEnvFileSource],
   ['.codex/config.json environment.env_file_source', configEnvFileSource],
+  ['.jarvis/deploy_contract.json env_file_source', deployRootEnvFileSource],
   ['.jarvis/deploy_contract.json environment.env_file_source', deployEnvFileSource],
   ['.jarvis/verification_contract.json environment.env_file_source', verificationEnvFileSource],
   ['.jarvis/production_grade_profile.json deploy.env_file_source', profileEnvFileSource],
@@ -233,9 +242,11 @@ console.log('- CI gates: install, lint, typecheck, web build, release bundle, ar
 console.log('- Release workflow: reviewable bundle only; live deploy intentionally not configured');
 console.log('');
 console.log('## Environment Source');
-console.log(`- env_file_source: ${configEnvFileSource || deployEnvFileSource || 'unknown'}`);
-console.log(`- workspace config: ${configEnvFileSource || 'missing'}`);
-console.log(`- deploy contract: ${deployEnvFileSource || 'missing'}`);
+console.log(`- env_file_source: ${configRootEnvFileSource || configEnvFileSource || deployRootEnvFileSource || deployEnvFileSource || 'unknown'}`);
+console.log(`- workspace config root: ${configRootEnvFileSource || 'missing'}`);
+console.log(`- workspace config environment: ${configEnvFileSource || 'missing'}`);
+console.log(`- deploy contract root: ${deployRootEnvFileSource || 'missing'}`);
+console.log(`- deploy contract environment: ${deployEnvFileSource || 'missing'}`);
 console.log(`- verification contract: ${verificationEnvFileSource || 'missing'}`);
 console.log(`- production profile: ${profileEnvFileSource || 'missing'}`);
 console.log('');

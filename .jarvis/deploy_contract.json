@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
   "workspace": "productivity-game",
+  "env_file_source": "default process env only",
   "runtime_target": "cynik",
   "artifact": {
     "type": "static_web_export",

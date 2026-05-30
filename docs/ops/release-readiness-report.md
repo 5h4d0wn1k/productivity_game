@@ -1,11 +1,12 @@
 # Release Readiness Report
 
 Workspace: productivity-game
-Date: 2026-05-29
+Date: 2026-05-30
 Branch: harden/release-readiness-node-0255b3ca01be
 
 ## Snapshot
 
+- Current retry node `node-cf81f8cec093`: resolved the remaining external `env_file_source` warning by adding top-level `env_file_source` aliases to the workspace config and deploy contract while preserving the existing nested `environment.env_file_source` values; preflight and the repo operating-system report now require root and nested values to stay aligned.
 - Current retry node `node-b01413c3ad7e`: revalidated the release-readiness baseline, confirmed the stale `env_file_source` warning remains resolved in repo-local contracts, refreshed deploy/smoke evidence, and kept this pass to report-only documentation with no runtime behavior change.
 - Prior retry node `node-c0fa602351f7`: revalidated the release-readiness baseline and added the environment-source rule directly to `AGENTS.md` so future AI sessions inherit it before consulting advisory `.codex` and `.jarvis` guidance.
 - Git hygiene: work moved off `main` to branch `harden/release-readiness-node-0255b3ca01be`, was committed, pushed with upstream tracking, and opened as draft PR #1: https://github.com/5h4d0wn1k/productivity_game/pull/1.
@@ -14,8 +15,8 @@ Branch: harden/release-readiness-node-0255b3ca01be
 - Verification contract: `.jarvis/verification_contract.json` records required, advisory, blocked, deploy, and rollback gates.
 - Production profile: `.jarvis/production_grade_profile.json` records maturity target, runtime, delivery path, agile operating posture, deploy assumptions, product docs, and risk register; maturity is now tracked as a self-checking baseline at 45%.
 - Agile work item contract: `.jarvis/agile_work_item.json` defines required work item fields, definition of ready, definition of done, verification expectations, and rollback expectations for PR-sized changes.
-- Deploy safety: `.jarvis/deploy_contract.json` records runtime target, env source, artifact, health, rollout, abort, and rollback posture; `env_file_source` is now also documented in `.codex/config.json` and checked for consistency across operating contracts.
-- Current env source warning: resolved in the repository artifacts. `env_file_source` is documented as `default process env only` in `.codex/config.json`, `.jarvis/deploy_contract.json`, `.jarvis/verification_contract.json`, and `.jarvis/production_grade_profile.json`; preflight and the repo operating-system report fail on missing or mismatched values.
+- Deploy safety: `.jarvis/deploy_contract.json` records runtime target, env source, artifact, health, rollout, abort, and rollback posture; `env_file_source` is now documented at the top level and nested environment level in both `.codex/config.json` and `.jarvis/deploy_contract.json`, then checked for consistency across operating contracts.
+- Current env source warning: resolved in the repository artifacts. `env_file_source` is documented as `default process env only` in workspace root, workspace environment, deploy root, deploy environment, verification contract, and production profile; preflight and the repo operating-system report fail on missing or mismatched values.
 - AI operating guidance: `AGENTS.md`, `.codex/config.json`, `.codex/hooks/preflight.sh`, advisory checklist hooks, and `.codex/rules/*` provide repo-local guardrails, including an explicit workspace environment-source contract.
 - Product planning: PRFAQ/problem framing and critical user journey templates exist under `docs/product`.
 - Dirty-worktree quarantine: `docs/ops/wip-quarantine-node-075359a7d791.md` and `docs/ops/wip-quarantine-node-19a00efabc63.md` record pre-edit dirty WIP inventories for the retry path.
@@ -40,6 +41,7 @@ Branch: harden/release-readiness-node-0255b3ca01be
 - Added advisory security audit to CI without making known dependency findings block unrelated hardening.
 - Added deploy/rollback runbook under `docs/deployment`.
 - Added `environment.env_file_source` to `.codex/config.json` and enforce matching values across `.codex/config.json`, `.jarvis/deploy_contract.json`, `.jarvis/verification_contract.json`, and `.jarvis/production_grade_profile.json` in preflight and the repo operating-system report.
+- Added top-level `env_file_source` aliases to `.codex/config.json` and `.jarvis/deploy_contract.json`, then hardened preflight and the repo operating-system report to validate root and nested values together.
 - Added the same `env_file_source` alignment rule to `AGENTS.md` so the primary repo-local AI operating contract names the deploy environment source before any mutable work.
 - Tightened the `env_file_source` self-check so missing values in any of the four operating contracts now fail preflight and `repo_operating_system_report.js --check`; the report output also prints workspace, deploy, verification, and production-profile sources separately.
 - Added Markdown advisory hooks and durable `.codex/rules` for scope, evidence, non-destructive operations, verification, and release.
@@ -51,6 +53,37 @@ Branch: harden/release-readiness-node-0255b3ca01be
 - Refreshed this release-readiness report for `node-b01413c3ad7e` with current local verification, deploy blockage, smoke, service-restart, PR-check, and rollback evidence.
 
 ## Verification Evidence
+
+Node `node-cf81f8cec093` evidence refreshed on 2026-05-30:
+
+- Start inventory `git status --short --branch`: branch `harden/release-readiness-node-0255b3ca01be` tracking `origin/harden/release-readiness-node-0255b3ca01be` with a clean worktree.
+- Read-only inventory confirmed existing operating artifacts: `AGENTS.md`, `.codex/config.json`, `.codex/hooks/*`, `.codex/rules/*`, `.codex/scripts/repo_operating_system_report.js`, `.jarvis/deploy_contract.json`, `.jarvis/verification_contract.json`, `.jarvis/agile_work_item.json`, `.jarvis/production_grade_profile.json`, `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `docs/deployment/deploy-and-rollback.md`, `docs/product/prfaq-template.md`, `docs/product/critical-user-journeys.md`, and this release-readiness report.
+- Hardening delta: added top-level `env_file_source` aliases to `.codex/config.json` and `.jarvis/deploy_contract.json`; updated `AGENTS.md`, `docs/deployment/deploy-and-rollback.md`, `.codex/hooks/preflight.sh`, and `.codex/scripts/repo_operating_system_report.js` so root and nested environment-source values are documented and validated together.
+- `node --check .codex/scripts/repo_operating_system_report.js`: passed.
+- `bash -n .codex/hooks/preflight.sh`: passed.
+- `git diff --check`: passed.
+- JSON parse check for `package.json`, `package-lock.json`, `.codex/config.json`, `.jarvis/production_grade_profile.json`, `.jarvis/verification_contract.json`, `.jarvis/agile_work_item.json`, and `.jarvis/deploy_contract.json`: passed.
+- YAML parse check for `.github/workflows/ci.yml` and `.github/workflows/release.yml` using Node `js-yaml`: passed.
+- Python syntax gate with `py_files=$(git ls-files '*.py'); if [ -n "$py_files" ]; then python3 -m py_compile $py_files; else echo 'python syntax gate: no python files'; fi`: passed as not applicable; no Python files are tracked.
+- `bash .codex/hooks/preflight.sh`: passed; it validates required operating artifacts plus `env_file_source` presence and consistency across workspace root, workspace environment, deploy root, deploy environment, verification contract, and production profile.
+- `node .codex/scripts/repo_operating_system_report.js --check`: passed with expected warnings for the missing test script and intentional dirty paths from this node.
+- `node .codex/scripts/repo_operating_system_report.js`: passed and reported all 14 required operating artifacts present, `env_file_source: default process env only`, workspace config root and environment set, deploy contract root and environment set, verification and production profile set, upstream tracking on `origin/harden/release-readiness-node-0255b3ca01be`, and maturity `self_checking_baseline (45%) -> self_improving`.
+- `npm ci --no-audit --fund=false`: passed on local Node v18.19.1/npm 9.2.0 with the known `EBADENGINE` warning for `eslint-visitor-keys@5.0.1`; CI remains configured for Node 20.
+- `npm run lint`: passed with 0 errors and the existing 23 warnings.
+- `npm run typecheck`: passed.
+- `npm pkg get scripts.test`: returned `{}`, confirming no automated test script exists.
+- `npm test`: failed because `package.json` has no `test` script.
+- `npm run build:web`: passed and exported `dist`.
+- `tar -czf release-bundle-web.tgz dist`, `tar -tzf release-bundle-web.tgz | wc -l`, `ls -lh release-bundle-web.tgz`, `test -f dist/index.html`, and `test -f dist/metadata.json`: passed; the bundle has 47 entries and is 2.1 MB.
+- `npm audit --audit-level=critical`: failed with 55 vulnerabilities, including 3 critical; remediation remains a separate dependency-hardening work item because some fixes imply compatibility-sensitive Expo/Firebase changes.
+- Bridge self-test discovery: `bridge -V` identified `/usr/sbin/bridge` as Linux bridge utility 6.1.0; no repo-local bridge self-test command is documented.
+- Deploy tooling check for `cynik`, `operatorctl`, `firebase`, and `eas`: all missing in this environment; `gh` is present.
+- Deploy credential marker check for `CYNIK_DEPLOY_TOKEN`, `FIREBASE_TOKEN`, and `EXPO_TOKEN`: absent; no secret values were read or printed.
+- Shadow deploy attempt: blocked because the `cynik` CLI and `CYNIK_DEPLOY_TOKEN` are unavailable.
+- Static shadow smoke with `python3 -m http.server 18772 --directory dist`: `GET /` returned 200 with a 1231-byte web shell and `GET /health` returned 404.
+- Product-specific systemd inventory: no `productivity-game`, `productivity-app`, or `productivity` service unit was found, so no service was restarted.
+- Rollback target check from `.jarvis/deploy_contract.json` and `.jarvis/production_grade_profile.json`: confirmed `rollback.target=previous_release`, rollback mechanism `re-promote previous successful artifact or revert the release PR`, `workspace env_file_source=default process env only`, and `deploy env_file_source=default process env only`.
+- PR delivery check with `gh pr view 1`: draft PR #1 remains open from `harden/release-readiness-node-0255b3ca01be` to `main`; hosted checks from the previous branch head reported success for `Web build and release bundle`, `Advisory regression probes`, `GitGuardian Security Checks`, `Vercel`, and `Vercel Preview Comments`. These hosted checks predate this local node until the branch is pushed again.
 
 Node `node-b01413c3ad7e` evidence refreshed on 2026-05-29:
 

@@ -1,6 +1,7 @@
 {
   "schema_version": "1.0.0",
   "workspace": "productivity-game",
+  "env_file_source": "default process env only",
   "mode": "advisory_first_pr_first",
   "primary_guidance": "AGENTS.md",
   "verification_contract": ".jarvis/verification_contract.json",

@@ -14,7 +14,7 @@ These instructions override broader defaults for this repository.
 
 - Load this file first for every AI-assisted session, then apply the advisory `.codex` and `.jarvis` guidance.
 - Treat `.codex/config.json`, `.codex/rules/*.md`, `.codex/hooks/*.md`, `.jarvis/production_grade_profile.json`, `.jarvis/agile_work_item.json`, and `.jarvis/verification_contract.json` as repo-local operating guidance, not autonomous permission to change behavior.
-- Treat `env_file_source` as `default process env only`; keep that value aligned across `.codex/config.json`, `.jarvis/deploy_contract.json`, `.jarvis/verification_contract.json`, and `.jarvis/production_grade_profile.json`.
+- Treat `env_file_source` as `default process env only`; keep that value aligned across `.codex/config.json`, `.jarvis/deploy_contract.json`, `.jarvis/verification_contract.json`, and `.jarvis/production_grade_profile.json`. When workspace or deploy contracts include both top-level `env_file_source` and nested `environment.env_file_source`, both values must match.
 - Keep `.codex/hooks` advisory or validation-oriented. Do not add auto-executing hooks without explicit approval.
 - Start mutable work from read-only inventory: inspect branch state, existing policy files, package scripts, and affected docs/code before editing.
 - Keep writes inside the user's explicit scope. If the requested fix requires files outside scope, stop and ask for scope expansion.
