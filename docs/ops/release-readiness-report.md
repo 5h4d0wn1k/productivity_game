@@ -83,7 +83,7 @@ Node `node-cf81f8cec093` evidence refreshed on 2026-05-30:
 - Static shadow smoke with `python3 -m http.server 18772 --directory dist`: `GET /` returned 200 with a 1231-byte web shell and `GET /health` returned 404.
 - Product-specific systemd inventory: no `productivity-game`, `productivity-app`, or `productivity` service unit was found, so no service was restarted.
 - Rollback target check from `.jarvis/deploy_contract.json` and `.jarvis/production_grade_profile.json`: confirmed `rollback.target=previous_release`, rollback mechanism `re-promote previous successful artifact or revert the release PR`, `workspace env_file_source=default process env only`, and `deploy env_file_source=default process env only`.
-- PR delivery check with `gh pr view 1`: draft PR #1 remains open from `harden/release-readiness-node-0255b3ca01be` to `main`; hosted checks from the previous branch head reported success for `Web build and release bundle`, `Advisory regression probes`, `GitGuardian Security Checks`, `Vercel`, and `Vercel Preview Comments`. These hosted checks predate this local node until the branch is pushed again.
+- PR delivery check before packaging this node with `gh pr view 1`: draft PR #1 remained open from `harden/release-readiness-node-0255b3ca01be` to `main`; hosted checks from the previous branch head reported success for `Web build and release bundle`, `Advisory regression probes`, `GitGuardian Security Checks`, `Vercel`, and `Vercel Preview Comments`. Current hosted PR evidence should be refreshed after pushing the packaged node.
 
 Node `node-b01413c3ad7e` evidence refreshed on 2026-05-29:
 
