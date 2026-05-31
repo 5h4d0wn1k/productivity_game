@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "workspace": "productivity-game",
+  "env_file_source": "default process env only",
+  "runtime_target": "cynik",
+  "artifact": {
+    "type": "static_web_export",
+    "build_command": "npm run build:web",
+    "output_directory": "dist",
+    "release_bundle": "release-bundle-web.tgz",
+    "release_workflow": ".github/workflows/release.yml"
+  },
+  "environment": {
+    "env_file_source": "default process env only",
+    "secret_policy": "Do not commit .env files or private credentials. Expo public variables are expected from the target runtime.",
+    "required_public_variables": [
+      "EXPO_PUBLIC_FIREBASE_API_KEY",
+      "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN",
+      "EXPO_PUBLIC_FIREBASE_PROJECT_ID",
+      "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET",
+      "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
+      "EXPO_PUBLIC_FIREBASE_APP_ID",
+      "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID",
+      "EXPO_PUBLIC_FIREBASE_DATABASE_URL",
+      "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID"
+    ]
+  },
+  "health": {
+    "canonical_path": "/health",
+    "current_local_smoke": "GET / against the static dist artifact",
+    "status": "canonical /health must be implemented or mapped in the deployment target before it becomes a blocking smoke gate"
+  },
+  "rollout": {
+    "strategy": "PR-first artifact promotion; .github/workflows/release.yml builds a reviewable bundle but does not deploy live services",
+    "change_window": "normal business hours until automated smoke and rollback are proven",
+    "abort_conditions": [
+      "artifact build fails",
+      "target runtime cannot serve the web shell",
+      "Firebase auth initialization fails for known-good public env",
+      "critical user journeys cannot load at smoke depth"
+    ]
+  },
+  "rollback": {
+    "target": "previous_release",
+    "mechanism": "re-promote previous successful artifact or revert the release PR",
+    "required_confirmation": "identify previous successful commit SHA or artifact before deploy",
+    "data_migration_policy": "no schema or data migrations are part of this baseline"
+  }
+}

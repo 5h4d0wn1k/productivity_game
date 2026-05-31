@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web-build:
+    name: Web build and release bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --fund=false
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build web export
+        run: npm run build:web
+
+      - name: Create release bundle
+        run: tar -czf release-bundle-web.tgz dist
+
+      - name: Upload release bundle
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-release-bundle
+          path: release-bundle-web.tgz
+          if-no-files-found: error
+          retention-days: 14
+
+  advisory-regression-probes:
+    name: Advisory regression probes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --fund=false
+
+      - name: Automated test suite
+        run: |
+          if npm run | grep -qE '^  test$'; then
+            npm test
+          else
+            echo "::warning::No test script is defined yet; regression coverage is advisory until a real test suite is added."
+          fi
+
+      - name: Audit critical vulnerabilities
+        continue-on-error: true
+        run: npm audit --audit-level=critical
