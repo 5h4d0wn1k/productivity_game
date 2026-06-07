@@ -1,0 +1,6 @@
+{
+  "schema_version": "1.0",
+  "workspace": "productivity-game",
+  "canonical_contract": ".jarvis/verification_contract.json",
+  "purpose": "Root marker for workspace scanners. The authoritative verification contract lives at .jarvis/verification_contract.json."
+}

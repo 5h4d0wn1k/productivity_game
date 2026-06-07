@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "created_at": "2026-06-07",
+  "workspace": "productivity-game",
+  "runtime_target": "cynik",
+  "artifact": {
+    "type": "expo_web_static_export",
+    "build_command": "npm run build:web",
+    "output_directory": "dist",
+    "release_bundle_command": "mkdir -p release-bundles && tar -czf release-bundles/productivity-game-web-$(git rev-parse --short HEAD).tgz dist"
+  },
+  "environment": {
+    "env_file_source": "default process environment only; no committed .env file",
+    "ci_and_hosting_source": "GitHub Actions variables/secrets or hosting-platform environment configuration",
+    "required_public_variables": [
+      "EXPO_PUBLIC_FIREBASE_API_KEY",
+      "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN",
+      "EXPO_PUBLIC_FIREBASE_PROJECT_ID",
+      "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET",
+      "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
+      "EXPO_PUBLIC_FIREBASE_APP_ID",
+      "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID",
+      "EXPO_PUBLIC_FIREBASE_DATABASE_URL",
+      "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID"
+    ],
+    "secret_handling": "Do not commit .env files. Expo public variables are client-visible and must not contain server-only secrets."
+  },
+  "healthcheck": {
+    "path": "/health",
+    "expected_success": "HTTP 200 from deployed target",
+    "current_repo_status": "not implemented in Expo routes; hosting layer must provide this path or a future repo change must add it",
+    "smoke_command_template": "curl -fsS ${BASE_URL}/health"
+  },
+  "rollout": {
+    "strategy": "PR-first, CI-verified build, optional shadow deploy, then promote",
+    "shadow_deploy": "blocked_until_target_url_and_credentials_are_configured",
+    "abort_conditions": [
+      "Required CI install, lint, build, or artifact upload failure",
+      "Typecheck failure after it has been promoted from advisory to required",
+      "Shadow deploy failure",
+      "Healthcheck failure",
+      "Critical user journey smoke failure for auth and task flow"
+    ]
+  },
+  "rollback": {
+    "target": "previous_release",
+    "operator_action": "Use the hosting platform to restore the last known-good release artifact.",
+    "confirmation_required": true,
+    "data_migration_risk": "none for the current config/docs-only hardening change"
+  }
+}

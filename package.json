@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "EXPO_NO_TELEMETRY=1 npx expo start",
     "build:web": "npx expo export --platform web",
-    "lint": "npx expo lint",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "verify": "bash .codex/hooks/verify.sh",
+    "verify:strict": "STRICT_RELEASE_VERIFY=1 bash .codex/hooks/verify.sh",
     "clean": "rm -rf node_modules .expo yarn.lock && yarn install"
   },
   "dependencies": {
@@ -55,6 +58,8 @@
     "@types/react-native": "^0.73.0",
     "@types/react-native-google-signin": "^1.0.7",
     "@types/react-slider": "^1.3.6",
+    "eslint": "^8.57.1",
+    "eslint-config-expo": "~8.0.1",
     "typescript": "^5.1.3"
   },
   "overrides": {

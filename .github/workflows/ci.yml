@@ -1,0 +1,93 @@
+name: Release Readiness
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify Expo app
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CI: "1"
+      EXPO_NO_TELEMETRY: "1"
+      EXPO_PUBLIC_FIREBASE_API_KEY: ci-placeholder
+      EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: ci-placeholder.firebaseapp.com
+      EXPO_PUBLIC_FIREBASE_PROJECT_ID: ci-placeholder
+      EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET: ci-placeholder.appspot.com
+      EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "000000000000"
+      EXPO_PUBLIC_FIREBASE_APP_ID: "1:000000000000:web:ci"
+      EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID: G-CIPLACEHOLDER
+      EXPO_PUBLIC_FIREBASE_DATABASE_URL: https://ci-placeholder.firebaseio.com
+      EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: ci-placeholder.apps.googleusercontent.com
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck advisory baseline
+        id: typecheck
+        continue-on-error: true
+        run: npm run typecheck
+
+      - name: Automated test suite
+        id: tests
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.test ? 0 : 1)"; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            npm test
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=No automated test suite::No npm test script is configured. See .jarvis/verification_contract.json."
+          fi
+
+      - name: Build web bundle
+        run: npm run build:web
+
+      - name: Upload web bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: productivity-game-web
+          path: dist
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Summarize release readiness
+        if: always()
+        run: |
+          {
+            echo "### Release readiness"
+            echo "- install: npm ci"
+            echo "- lint: npm run lint"
+            echo "- typecheck: ${{ steps.typecheck.outcome }} (advisory until the existing baseline errors are fixed)"
+            echo "- tests configured: ${{ steps.tests.outputs.configured }}"
+            echo "- web export: npm run build:web"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "${{ steps.typecheck.outcome }}" != "success" ]; then
+            echo "::warning title=Typecheck advisory failure::Fix the existing TypeScript baseline before promoting typecheck to a required gate."
+          fi
