@@ -113,9 +113,8 @@ Outcomes:
   `dist` size was 6.5M.
 - `npm run verify` passed as an advisory gate under Node 22.13.0: required
   install, lint, and web export passed; no test script was configured.
-- The `npm run verify` typecheck substep ran against a dirty local worktree
-  that includes app-file edits outside this node's scope, so it is not used as
-  clean-branch promotion evidence.
+- The `npm run verify` typecheck substep failed on the same known baseline
+  errors in `calendar.tsx` and `habitCreator.tsx`, and remained advisory.
 - Python syntax gate passed; no repo-owned Python files required compilation.
 - Shadow deploy and shadow smoke were blocked because `SHADOW_BASE_URL`, deploy
   command, and credentials are not configured.
