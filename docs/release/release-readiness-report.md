@@ -19,8 +19,8 @@ Blockers:
 - TypeScript baseline is not clean. `npm run typecheck` fails in
   `app/(tabs)/calendar.tsx` and `app/(tabs)/habitCreator.tsx`.
 - No real automated test suite is configured in `package.json`.
-- `npm ci` reported 75 dependency vulnerabilities: 3 low, 39 moderate, 30 high,
-  and 3 critical. No automated dependency fix was applied in this pass.
+- `npm audit` reported 75 dependency vulnerabilities: 3 low, 39 moderate, 30
+  high, and 3 critical. No automated dependency fix was applied in this pass.
 - No shadow deployment target URL, deploy command, or credentials are documented.
 - The deploy contract declares `/health`, but the repo does not implement a
   route for it. The hosting layer must provide it or the app must add it later.
@@ -78,10 +78,10 @@ gh pr checks 2 --watch --interval 10
 
 Outcomes:
 
-- `npm ci` passed with local Node 18 engine warnings and reported dependency
-  vulnerabilities.
+- `npm ci` passed with local Node 18 engine warnings; `npm audit --json`
+  reported dependency vulnerabilities.
 - `npm ci --cache .npm --prefer-offline` passed with local Node 18 engine
-  warnings and reported dependency vulnerabilities.
+  warnings.
 - `npm run lint` passed with 23 warnings and 0 errors.
 - `npm run typecheck` failed on the two known baseline errors listed above.
 - `npm run build:web` passed and exported `dist`.

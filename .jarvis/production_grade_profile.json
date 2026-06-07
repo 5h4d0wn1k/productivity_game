@@ -74,7 +74,7 @@
   "known_blockers": [
     "TypeScript baseline fails in app/(tabs)/calendar.tsx and app/(tabs)/habitCreator.tsx.",
     "No real automated test suite is configured.",
-    "npm ci reported 75 dependency vulnerabilities on 2026-06-07.",
+    "npm audit reported 75 dependency vulnerabilities on 2026-06-07.",
     "No hosted shadow deployment target or credentials are documented.",
     "Healthcheck path /health is declared by deploy contract but no repo-owned route or hosting-layer implementation is present.",
     "Branch protection and required checks cannot be confirmed from local repository state."
