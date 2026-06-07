@@ -42,12 +42,17 @@ Warnings:
   above Expo SDK 52's minimum Node 20.18.x requirement.
 - ESLint passes but reports 23 warnings, mostly unused imports and React hook
   dependency warnings.
+- The final PR CI run annotated that Node.js 20 JavaScript actions are being
+  deprecated on GitHub Actions runners. The workflow now uses Node 24-capable
+  action majors for checkout, Node setup, and artifact upload.
 
 ## Hardening Added
 
 - GitHub Actions CI for deterministic install, lint, advisory typecheck,
   optional real tests, web export, artifact upload, and a release-readiness
   summary.
+- Node 24-capable GitHub Actions majors for checkout, Node setup, and artifact
+  upload.
 - Production-grade profile under `.jarvis/production_grade_profile.json`.
 - Verification contract under `.jarvis/verification_contract.json` plus a root
   `verification_contract.json` scanner marker.
