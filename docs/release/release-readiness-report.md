@@ -16,11 +16,14 @@ planning templates, release documentation, and deterministic lint tooling.
 
 Blockers:
 
-- TypeScript baseline is not clean. `npm run typecheck` fails in
-  `app/(tabs)/calendar.tsx` and `app/(tabs)/habitCreator.tsx`.
+- Typecheck is still advisory. The clean branch baseline has known TypeScript
+  errors in `app/(tabs)/calendar.tsx` and `app/(tabs)/habitCreator.tsx`;
+  current local app-file edits outside this DevOps scope must be reviewed in a
+  separate lane before promoting typecheck to a required gate.
 - No real automated test suite is configured in `package.json`.
-- `npm audit` reported 75 dependency vulnerabilities: 3 low, 39 moderate, 30
-  high, and 3 critical. No automated dependency fix was applied in this pass.
+- Node 22.13.0 / npm 10.9.2 `npm audit` reported 56 dependency
+  vulnerabilities: 4 low, 29 moderate, 20 high, and 3 critical. No automated
+  dependency fix was applied in this pass.
 - No shadow deployment target URL, deploy command, or credentials are documented.
 - The deploy contract declares `/health`, but the repo does not implement a
   route for it. The hosting layer must provide it or the app must add it later.
@@ -29,17 +32,17 @@ Blockers:
 
 Warnings:
 
-- The repo has mixed lockfiles: `package-lock.json`, `yarn.lock`, and
-  `yarn copy.lock`. CI now treats npm and `package-lock.json` as canonical.
+- Package-manager policy is now explicit: npm `10.9.2` with
+  `package-lock.json` as the only committed lockfile. CI fails if
+  `yarn.lock` or `yarn copy.lock` is reintroduced.
 - The repo-local `npm run verify` hook uses `.npm` as a local cache to keep
   install evidence scoped to the workspace, and it passed in advisory mode.
-- `clean` still uses Yarn and deletes `yarn.lock`; that script should be
-  revisited in a separate dependency-management cleanup.
+- `clean` now uses `npm ci` and no longer deletes a tracked lockfile.
 - Firebase and Google public configuration are required at build/runtime and
   must be supplied through process environment or platform configuration.
-- Local verification ran on Node 18.19.1 with npm engine warnings. CI is pinned
-  to Node 22.13.0 to satisfy the current lint dependency graph while staying
-  above Expo SDK 52's minimum Node 20.18.x requirement.
+- Local Node 22.13.0 verification uses npm 10.9.2 and `npm ci` completed
+  without tar ENOENT failures. Local Node 18.19.1 remains below the CI target
+  and is not authoritative for release evidence.
 - ESLint passes but reports 23 warnings, mostly unused imports and React hook
   dependency warnings.
 - A PR CI run annotated that Node.js 20 JavaScript actions are being
@@ -53,6 +56,10 @@ Warnings:
   summary.
 - Node 24-capable GitHub Actions majors for checkout, Node setup, and artifact
   upload.
+- Explicit npm `packageManager` pin, npm-based `clean` script, and CI
+  package-manager policy check.
+- Removal of stale Yarn lockfiles so `package-lock.json` is the sole lockfile
+  of record.
 - Production-grade profile under `.jarvis/production_grade_profile.json`.
 - Verification contract under `.jarvis/verification_contract.json` plus a root
   `verification_contract.json` scanner marker.
@@ -66,13 +73,23 @@ Warnings:
 Observed local verification:
 
 ```bash
-npm ci
-npm audit --audit-level=low --json | node -e "let s=''; process.stdin.on('data',d=>s+=d); process.stdin.on('end',()=>{const j=JSON.parse(s); const v=j.metadata.vulnerabilities; console.log(JSON.stringify(v));});"
-npm ci --cache .npm --prefer-offline
-npm run lint
-npm run typecheck
-npm run build:web
-npm run verify
+npm_config_cache=.npm npx -y -p node@22.13.0 -p npm@10.9.2 sh -lc 'node --version && npm --version && which node && which npm'
+npm_config_cache=.npm npx -y -p node@22.13.0 -p npm@10.9.2 npm ci
+npm_config_cache=.npm npx -y -p node@22.13.0 -p npm@10.9.2 node - <<'NODE'
+const fs = require('fs');
+const pkg = require('./package.json');
+const expectedPackageManager = 'npm@10.9.2';
+const staleLockfiles = ['yarn.lock', 'yarn copy.lock'].filter((file) => fs.existsSync(file));
+if (pkg.packageManager !== expectedPackageManager) throw new Error(`package.json packageManager must be ${expectedPackageManager}`);
+if (!fs.existsSync('package-lock.json')) throw new Error('package-lock.json is required as the lockfile of record');
+if (staleLockfiles.length > 0) throw new Error(`Remove non-canonical Yarn lockfiles: ${staleLockfiles.join(', ')}`);
+console.log('package_manager_policy=pass');
+NODE
+npm_config_cache=.npm npx -y -p node@22.13.0 -p npm@10.9.2 npm run lint
+npm_config_cache=.npm npx -y -p node@22.13.0 -p npm@10.9.2 npm run build:web
+npm_config_cache=.npm npx -y -p node@22.13.0 -p npm@10.9.2 npm run verify
+npm_config_cache=.npm npx -y -p node@22.13.0 -p npm@10.9.2 sh -lc 'npm audit --audit-level=low --json > /tmp/productivity-game-npm-audit-node22.json; node -e "const fs=require(\"fs\"); const j=JSON.parse(fs.readFileSync(\"/tmp/productivity-game-npm-audit-node22.json\",\"utf8\")); console.log(JSON.stringify({vulnerabilities:j.metadata.vulnerabilities, dependencies:j.metadata.dependencies}, null, 2));"'
+find dist -maxdepth 3 -type f | sort | sed -n '1,80p' && du -sh dist
 find . -path ./node_modules -prune -o -path ./.git -prune -o -name '*.py' -print0 | xargs -0 -r python3 -m py_compile
 if node -e "process.exit(require('./package.json').scripts?.test ? 0 : 1)"; then echo test_script=present; else echo test_script=missing; fi
 test -n "${SHADOW_BASE_URL:-}" && echo shadow_url_configured || echo shadow_url_missing
@@ -84,16 +101,21 @@ gh pr checks 2 --watch --interval 10
 
 Outcomes:
 
-- `npm ci` passed with local Node 18 engine warnings; `npm audit --audit-level=low --json`
-  reported dependency vulnerabilities.
-- `npm ci --cache .npm --prefer-offline` passed with local Node 18 engine
-  warnings.
-- `npm run lint` passed with 23 warnings and 0 errors.
-- `npm run typecheck` failed on the two known baseline errors listed above.
-- `npm run build:web` passed and exported `dist`.
-- `npm run verify` passed as an advisory gate: required install, lint, and web
-  export passed; typecheck failed as an advisory known blocker; no test script
-  was configured.
+- Temporary local runtime was Node `v22.13.0` with npm `10.9.2`.
+- Package-manager policy check passed: `packageManager` is `npm@10.9.2`,
+  `package-lock.json` exists, and `yarn.lock` / `yarn copy.lock` are absent.
+- Node 22.13.0 `npm ci` passed and did not produce tar ENOENT failures; npm
+  audited 1352 installed packages during the clean install.
+- Node 22.13.0 / npm 10.9.2 `npm audit --audit-level=low --json` reported 56
+  vulnerabilities: 4 low, 29 moderate, 20 high, and 3 critical.
+- `npm run lint` passed with 23 warnings and 0 errors under Node 22.13.0.
+- `npm run build:web` passed under Node 22.13.0 and exported `dist`; local
+  `dist` size was 6.5M.
+- `npm run verify` passed as an advisory gate under Node 22.13.0: required
+  install, lint, and web export passed; no test script was configured.
+- The `npm run verify` typecheck substep ran against a dirty local worktree
+  that includes app-file edits outside this node's scope, so it is not used as
+  clean-branch promotion evidence.
 - Python syntax gate passed; no repo-owned Python files required compilation.
 - Shadow deploy and shadow smoke were blocked because `SHADOW_BASE_URL`, deploy
   command, and credentials are not configured.

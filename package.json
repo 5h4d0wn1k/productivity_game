@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "npm@10.9.2",
   "scripts": {
     "dev": "EXPO_NO_TELEMETRY=1 npx expo start",
     "build:web": "npx expo export --platform web",
@@ -10,7 +11,7 @@
     "lint": "eslint .",
     "verify": "bash .codex/hooks/verify.sh",
     "verify:strict": "STRICT_RELEASE_VERIFY=1 bash .codex/hooks/verify.sh",
-    "clean": "rm -rf node_modules .expo yarn.lock && yarn install"
+    "clean": "rm -rf node_modules .expo dist && npm ci"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.2.3",

@@ -43,6 +43,27 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
+      - name: Validate package-manager policy
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const pkg = require('./package.json');
+          const expectedPackageManager = 'npm@10.9.2';
+          const staleLockfiles = ['yarn.lock', 'yarn copy.lock'].filter((file) => fs.existsSync(file));
+
+          if (pkg.packageManager !== expectedPackageManager) {
+            throw new Error(`package.json packageManager must be ${expectedPackageManager}`);
+          }
+
+          if (!fs.existsSync('package-lock.json')) {
+            throw new Error('package-lock.json is required as the lockfile of record');
+          }
+
+          if (staleLockfiles.length > 0) {
+            throw new Error(`Remove non-canonical Yarn lockfiles: ${staleLockfiles.join(', ')}`);
+          }
+          NODE
+
       - name: Install dependencies
         run: npm ci
 
@@ -69,7 +90,7 @@ jobs:
         run: npm run build:web
 
       - name: Upload web bundle
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: productivity-game-web
           path: dist
@@ -81,6 +102,7 @@ jobs:
         run: |
           {
             echo "### Release readiness"
+            echo "- package manager: npm@10.9.2 with package-lock.json"
             echo "- install: npm ci"
             echo "- lint: npm run lint"
             echo "- typecheck: ${{ steps.typecheck.outcome }} (advisory until the existing baseline errors are fixed)"

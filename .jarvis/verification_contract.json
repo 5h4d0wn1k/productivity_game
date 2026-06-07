@@ -8,9 +8,26 @@
   "runtime": {
     "ci_node_version": "22.13.0",
     "minimum_expo_sdk_52_node_version": "20.18.x",
+    "node_22_13_0_npm_version": "10.9.2",
+    "local_node_22_status": "npm ci passed on 2026-06-07 with no tar ENOENT failures.",
     "local_node_18_status": "npm ci currently passes with engine warnings; CI uses Node 22.13.0 to satisfy the lint dependency graph."
   },
+  "package_manager_policy": {
+    "package_manager": "npm@10.9.2",
+    "lockfile_of_record": "package-lock.json",
+    "non_canonical_lockfiles": [
+      "yarn.lock",
+      "yarn copy.lock"
+    ],
+    "policy": "Only package-lock.json is committed. CI fails if Yarn lockfiles are reintroduced."
+  },
   "required_local_commands": [
+    {
+      "id": "package_manager_policy",
+      "command": "node -e \"const fs=require('fs'); const p=require('./package.json'); const stale=['yarn.lock','yarn copy.lock'].filter(f=>fs.existsSync(f)); if (p.packageManager !== 'npm@10.9.2' || !fs.existsSync('package-lock.json') || stale.length) process.exit(1);\"",
+      "purpose": "Verify npm is the package manager of record and stale Yarn lockfiles are absent.",
+      "required_now": true
+    },
     {
       "id": "install",
       "command": "npm ci",
@@ -101,6 +118,7 @@
     }
   },
   "ci_required_now": [
+    "Verify Expo app / Validate package-manager policy",
     "Verify Expo app / Install dependencies",
     "Verify Expo app / Lint",
     "Verify Expo app / Build web bundle",
