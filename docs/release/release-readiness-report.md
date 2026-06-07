@@ -71,7 +71,9 @@ find . -path ./node_modules -prune -o -path ./.git -prune -o -name '*.py' -print
 if node -e "process.exit(require('./package.json').scripts?.test ? 0 : 1)"; then echo test_script=present; else echo test_script=missing; fi
 test -n "${SHADOW_BASE_URL:-}" && echo shadow_url_configured || echo shadow_url_missing
 node -e "const c=require('./.jarvis/deploy_contract.json'); console.log('runtime_target='+c.runtime_target); console.log('healthcheck='+c.healthcheck.path); console.log('rollback='+c.rollback.target); console.log('service_restart_validation=not_applicable_client_static_artifact');"
-short_sha=$(git rev-parse --short HEAD); tar -czf "release-bundles/productivity-game-web-${short_sha}.tgz" dist; sha256sum "release-bundles/productivity-game-web-${short_sha}.tgz"
+mkdir -p release-bundles; tar --sort=name --mtime='UTC 2026-06-07' --owner=0 --group=0 --numeric-owner -cf - dist | gzip -n > release-bundles/productivity-game-web-20260607-release-readiness.tgz; sha256sum release-bundles/productivity-game-web-20260607-release-readiness.tgz
+gh pr view --json number,url,state,headRefName,baseRefName,statusCheckRollup
+gh pr checks 2 --watch --interval 10
 ```
 
 Outcomes:
@@ -90,18 +92,20 @@ Outcomes:
 - Shadow deploy and shadow smoke were blocked because `SHADOW_BASE_URL`, deploy
   command, and credentials are not configured.
 - Rollback target is declared as `previous_release`.
+- PR #2 is open from `harden/release-readiness-os-node-445759234b7c` to `main`.
+- PR checks passed after push: `Verify Expo app`, `GitGuardian Security Checks`,
+  `Vercel`, and `Vercel Preview Comments`.
 - Release bundle created:
-  `release-bundles/productivity-game-web-0582e02.tgz`.
+  `release-bundles/productivity-game-web-20260607-release-readiness.tgz`.
 - Release bundle SHA-256:
-  `85baf6900792afbcaecf39ccb36d91611692faa83d83bdb87de10710515962b5`.
+  `f9a53fbf4a3d3568ec204c13813730826fec20ab6e944d210cab6dd73f07371a`.
 
 ## Deploy Safety
 
-Risk class for this change: medium. CI/docs/contracts are low runtime risk, but
-release-process risk remains elevated until GitHub CI proves a clean install on
-Node 22.13.0 and the TypeScript baseline, missing test suite, dependency
-vulnerabilities, healthcheck implementation, and shadow deploy path are
-resolved.
+Risk class for this change: medium. CI/docs/contracts are low runtime risk, and
+GitHub CI passed on the PR branch. Production-promotion risk remains elevated
+until the TypeScript baseline, missing test suite, dependency vulnerabilities,
+healthcheck implementation, and shadow deploy path are resolved.
 
 Rollout strategy:
 

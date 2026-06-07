@@ -76,10 +76,10 @@
     },
     "release_bundle_creation": {
       "status": "passed_on_2026-06-07",
-      "command": "npm run build:web && mkdir -p release-bundles && tar -czf release-bundles/productivity-game-web-$(git rev-parse --short HEAD).tgz dist",
-      "artifact": "release-bundles/productivity-game-web-0582e02.tgz",
+      "command": "npm run build:web && mkdir -p release-bundles && tar --sort=name --mtime='UTC 2026-06-07' --owner=0 --group=0 --numeric-owner -cf - dist | gzip -n > release-bundles/productivity-game-web-20260607-release-readiness.tgz",
+      "artifact": "release-bundles/productivity-game-web-20260607-release-readiness.tgz",
       "artifact_directory": "release-bundles",
-      "sha256": "85baf6900792afbcaecf39ccb36d91611692faa83d83bdb87de10710515962b5"
+      "sha256": "f9a53fbf4a3d3568ec204c13813730826fec20ab6e944d210cab6dd73f07371a"
     },
     "shadow_deploy_attempt": {
       "status": "blocked",
