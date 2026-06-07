@@ -1,0 +1,139 @@
+{
+  "schema_version": "1.0",
+  "created_at": "2026-06-07",
+  "workspace": "productivity-game",
+  "canonical_package_manager": "npm",
+  "lockfile_of_record": "package-lock.json",
+  "mode": "advisory-first until baseline blockers are remediated",
+  "runtime": {
+    "ci_node_version": "22.13.0",
+    "minimum_expo_sdk_52_node_version": "20.18.x",
+    "node_22_13_0_npm_version": "10.9.2",
+    "local_node_22_status": "npm ci passed on 2026-06-07 with no tar ENOENT failures.",
+    "local_node_18_status": "npm ci currently passes with engine warnings; CI uses Node 22.13.0 to satisfy the lint dependency graph."
+  },
+  "package_manager_policy": {
+    "package_manager": "npm@10.9.2",
+    "lockfile_of_record": "package-lock.json",
+    "non_canonical_lockfiles": [
+      "yarn.lock",
+      "yarn copy.lock"
+    ],
+    "policy": "Only package-lock.json is committed. CI fails if Yarn lockfiles are reintroduced."
+  },
+  "required_local_commands": [
+    {
+      "id": "package_manager_policy",
+      "command": "node -e \"const fs=require('fs'); const p=require('./package.json'); const stale=['yarn.lock','yarn copy.lock'].filter(f=>fs.existsSync(f)); if (p.packageManager !== 'npm@10.9.2' || !fs.existsSync('package-lock.json') || stale.length) process.exit(1);\"",
+      "purpose": "Verify npm is the package manager of record and stale Yarn lockfiles are absent.",
+      "required_now": true
+    },
+    {
+      "id": "install",
+      "command": "npm ci",
+      "purpose": "Install dependencies from package-lock.json with a deterministic dependency graph.",
+      "required_now": true
+    },
+    {
+      "id": "lint",
+      "command": "npm run lint",
+      "purpose": "Run the repo ESLint configuration.",
+      "required_now": true
+    },
+    {
+      "id": "typecheck",
+      "command": "npm run typecheck",
+      "purpose": "Run TypeScript strict checks without emitting files.",
+      "required_now": false,
+      "promotion_condition": "Promote to required after existing errors in app/(tabs)/calendar.tsx and app/(tabs)/habitCreator.tsx are fixed."
+    },
+    {
+      "id": "automated_tests",
+      "command": "npm test",
+      "purpose": "Run a meaningful automated regression suite.",
+      "required_now": false,
+      "promotion_condition": "Promote to required after package.json defines a real test script."
+    },
+    {
+      "id": "build_web",
+      "command": "npm run build:web",
+      "purpose": "Export the Expo web bundle into dist.",
+      "required_now": true
+    },
+    {
+      "id": "repo_preflight",
+      "command": "bash .codex/hooks/preflight.sh",
+      "purpose": "Verify repo-local operating contracts are present and parseable.",
+      "required_now": true
+    }
+  ],
+  "local_gate": {
+    "command": "npm run verify",
+    "strict_command": "npm run verify:strict",
+    "install_detail": "The repo-local verify hook runs npm ci --cache .npm --prefer-offline after machine-level npm cache corruption was observed locally.",
+    "status": "advisory; expected to pass required install, lint, and build while warning on known typecheck and missing-test gaps",
+    "strict_gate_status": "blocked until typecheck passes and a real test script exists"
+  },
+  "bridge_self_upgrade_gates": {
+    "python_syntax_gate": {
+      "status": "not_applicable",
+      "command": "find . -path ./node_modules -prune -o -path ./.git -prune -o -name '*.py' -print0 | xargs -0 -r python3 -m py_compile",
+      "reason": "No Python source files are owned by this repo."
+    },
+    "automated_test_suite": {
+      "status": "missing",
+      "command": "npm test",
+      "required_before_production_promotion": true,
+      "reason": "package.json does not define a test script."
+    },
+    "bridge_self_test": {
+      "status": "repo_contract_preflight",
+      "command": "bash .codex/hooks/preflight.sh",
+      "reason": "The runtime bridge is outside this repository; repo-local AI guardrails are checked instead."
+    },
+    "release_bundle_creation": {
+      "status": "passed_on_2026-06-07",
+      "command": "npm run build:web && mkdir -p release-bundles && tar --sort=name --mtime='UTC 2026-06-07' --owner=0 --group=0 --numeric-owner -cf - dist | gzip -n > release-bundles/productivity-game-web-20260607-release-readiness.tgz",
+      "artifact": "release-bundles/productivity-game-web-20260607-release-readiness.tgz",
+      "artifact_directory": "release-bundles",
+      "sha256": "f9a53fbf4a3d3568ec204c13813730826fec20ab6e944d210cab6dd73f07371a"
+    },
+    "shadow_deploy_attempt": {
+      "status": "blocked",
+      "reason": "No shadow deployment target URL, deploy command, or credentials are documented in this repo."
+    },
+    "shadow_smoke": {
+      "status": "blocked",
+      "command": "curl -fsS ${SHADOW_BASE_URL}/health",
+      "reason": "SHADOW_BASE_URL is not configured and /health is not implemented in repo-owned web routes."
+    },
+    "service_restart_validation": {
+      "status": "not_applicable",
+      "reason": "This repo builds a client/web artifact and does not define a long-running service process."
+    },
+    "rollback_target_confirmation": {
+      "status": "declared",
+      "target": "previous_release",
+      "command": "Confirm the hosting platform has a previous successful release before promotion."
+    }
+  },
+  "ci_required_now": [
+    "Verify Expo app / Validate package-manager policy",
+    "Verify Expo app / Install dependencies",
+    "Verify Expo app / Lint",
+    "Verify Expo app / Build web bundle",
+    "Verify Expo app / Upload web bundle"
+  ],
+  "ci_advisory_now": [
+    "Verify Expo app / Typecheck advisory baseline",
+    "Verify Expo app / Automated test suite"
+  ],
+  "production_promotion_blockers": [
+    "Fix TypeScript errors in app/(tabs)/calendar.tsx and app/(tabs)/habitCreator.tsx.",
+    "Add a real automated test suite for at least auth routing, task creation/completion, and Firebase service adapters.",
+    "Triage npm audit findings reported by npm audit.",
+    "Document and verify a shadow deployment target.",
+    "Implement or delegate the /health route to the hosting layer and verify it after deploy.",
+    "Confirm branch protection requires CI before merging to main."
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "version": "2026-06-07",
+  "workspace": "productivity-game",
+  "profile": "production_grade_os",
+  "contracts": {
+    "agents": "AGENTS.md",
+    "production_grade_profile": ".jarvis/production_grade_profile.json",
+    "verification_contract": ".jarvis/verification_contract.json",
+    "deploy_contract": ".jarvis/deploy_contract.json",
+    "release_readiness_report": "docs/release/release-readiness-report.md"
+  },
+  "default_delivery_policy": {
+    "mode": "advisory_first",
+    "branch_first": true,
+    "pr_first": true,
+    "preserve_working_behavior": true,
+    "destructive_actions_require_approval": true
+  },
+  "verification": {
+    "canonical_install": "npm ci",
+    "local_gate": "npm run verify",
+    "strict_local_gate": "npm run verify:strict",
+    "ci_workflow": ".github/workflows/ci.yml",
+    "test_suite_status": "missing"
+  },
+  "hooks": [
+    {
+      "name": "preflight",
+      "path": ".codex/hooks/preflight.sh",
+      "trigger": "manual_or_session_start",
+      "blocking": false
+    },
+    {
+      "name": "verify",
+      "path": ".codex/hooks/verify.sh",
+      "trigger": "pre_handoff",
+      "blocking": true
+    }
+  ],
+  "rules": [
+    ".codex/rules/ai-operating-guardrails.md",
+    ".codex/rules/release-readiness.md"
+  ]
+}
