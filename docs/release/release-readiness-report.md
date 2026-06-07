@@ -62,7 +62,7 @@ Observed local verification:
 
 ```bash
 npm ci
-set -o pipefail; npm audit --json | node -e "let s=''; process.stdin.on('data',d=>s+=d); process.stdin.on('end',()=>{const j=JSON.parse(s); const v=j.metadata.vulnerabilities; console.log(JSON.stringify(v));});"
+npm audit --audit-level=low --json | node -e "let s=''; process.stdin.on('data',d=>s+=d); process.stdin.on('end',()=>{const j=JSON.parse(s); const v=j.metadata.vulnerabilities; console.log(JSON.stringify(v));});"
 npm ci --cache .npm --prefer-offline
 npm run lint
 npm run typecheck
