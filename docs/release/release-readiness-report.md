@@ -19,7 +19,7 @@ Blockers:
 - TypeScript baseline is not clean. `npm run typecheck` fails in
   `app/(tabs)/calendar.tsx` and `app/(tabs)/habitCreator.tsx`.
 - No real automated test suite is configured in `package.json`.
-- `npm ci` reported 56 dependency vulnerabilities: 4 low, 29 moderate, 20 high,
+- `npm ci` reported 75 dependency vulnerabilities: 3 low, 39 moderate, 30 high,
   and 3 critical. No automated dependency fix was applied in this pass.
 - No shadow deployment target URL, deploy command, or credentials are documented.
 - The deploy contract declares `/health`, but the repo does not implement a
@@ -31,9 +31,8 @@ Warnings:
 
 - The repo has mixed lockfiles: `package-lock.json`, `yarn.lock`, and
   `yarn copy.lock`. CI now treats npm and `package-lock.json` as canonical.
-- Machine-level npm cache/install state produced corrupted tarball and
-  incomplete `node_modules` evidence during this pass. The repo-local
-  `npm run verify` hook now uses `.npm` as a local cache and passed.
+- The repo-local `npm run verify` hook uses `.npm` as a local cache to keep
+  install evidence scoped to the workspace, and it passed in advisory mode.
 - `clean` still uses Yarn and deletes `yarn.lock`; that script should be
   revisited in a separate dependency-management cleanup.
 - Firebase and Google public configuration are required at build/runtime and
@@ -68,25 +67,33 @@ npm run lint
 npm run typecheck
 npm run build:web
 npm run verify
+find . -path ./node_modules -prune -o -path ./.git -prune -o -name '*.py' -print0 | xargs -0 -r python3 -m py_compile
+if node -e "process.exit(require('./package.json').scripts?.test ? 0 : 1)"; then echo test_script=present; else echo test_script=missing; fi
+test -n "${SHADOW_BASE_URL:-}" && echo shadow_url_configured || echo shadow_url_missing
+node -e "const c=require('./.jarvis/deploy_contract.json'); console.log('runtime_target='+c.runtime_target); console.log('healthcheck='+c.healthcheck.path); console.log('rollback='+c.rollback.target); console.log('service_restart_validation=not_applicable_client_static_artifact');"
+short_sha=$(git rev-parse --short HEAD); tar -czf "release-bundles/productivity-game-web-${short_sha}.tgz" dist; sha256sum "release-bundles/productivity-game-web-${short_sha}.tgz"
 ```
 
 Outcomes:
 
-- `npm ci` initially passed with local Node 18 engine warnings and reported
-  dependency vulnerabilities.
-- `npm ci --cache .npm --prefer-offline` passed after the machine-level npm
-  cache/install state produced corrupted tarball and incomplete `node_modules`
-  evidence.
+- `npm ci` passed with local Node 18 engine warnings and reported dependency
+  vulnerabilities.
+- `npm ci --cache .npm --prefer-offline` passed with local Node 18 engine
+  warnings and reported dependency vulnerabilities.
 - `npm run lint` passed with 23 warnings and 0 errors.
 - `npm run typecheck` failed on the two known baseline errors listed above.
 - `npm run build:web` passed and exported `dist`.
 - `npm run verify` passed as an advisory gate: required install, lint, and web
   export passed; typecheck failed as an advisory known blocker; no test script
   was configured.
+- Python syntax gate passed; no repo-owned Python files required compilation.
+- Shadow deploy and shadow smoke were blocked because `SHADOW_BASE_URL`, deploy
+  command, and credentials are not configured.
+- Rollback target is declared as `previous_release`.
 - Release bundle created:
-  `release-bundles/productivity-game-web-af10431.tgz`.
+  `release-bundles/productivity-game-web-0582e02.tgz`.
 - Release bundle SHA-256:
-  `99153a7bbd11f1388d299097ac83845aa46c7ca7e0aa8269919adfb4ad0fc2b0`.
+  `85baf6900792afbcaecf39ccb36d91611692faa83d83bdb87de10710515962b5`.
 
 ## Deploy Safety
 

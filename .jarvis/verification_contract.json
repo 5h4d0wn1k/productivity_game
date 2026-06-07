@@ -77,9 +77,9 @@
     "release_bundle_creation": {
       "status": "passed_on_2026-06-07",
       "command": "npm run build:web && mkdir -p release-bundles && tar -czf release-bundles/productivity-game-web-$(git rev-parse --short HEAD).tgz dist",
-      "artifact": "release-bundles/productivity-game-web-af10431.tgz",
+      "artifact": "release-bundles/productivity-game-web-0582e02.tgz",
       "artifact_directory": "release-bundles",
-      "sha256": "99153a7bbd11f1388d299097ac83845aa46c7ca7e0aa8269919adfb4ad0fc2b0"
+      "sha256": "85baf6900792afbcaecf39ccb36d91611692faa83d83bdb87de10710515962b5"
     },
     "shadow_deploy_attempt": {
       "status": "blocked",
