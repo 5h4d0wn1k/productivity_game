@@ -79,7 +79,7 @@ gh pr checks 2 --watch --interval 10
 
 Outcomes:
 
-- `npm ci` passed with local Node 18 engine warnings; `npm audit --json`
+- `npm ci` passed with local Node 18 engine warnings; `npm audit --audit-level=low --json`
   reported dependency vulnerabilities.
 - `npm ci --cache .npm --prefer-offline` passed with local Node 18 engine
   warnings.

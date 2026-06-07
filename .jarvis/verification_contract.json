@@ -113,7 +113,7 @@
   "production_promotion_blockers": [
     "Fix TypeScript errors in app/(tabs)/calendar.tsx and app/(tabs)/habitCreator.tsx.",
     "Add a real automated test suite for at least auth routing, task creation/completion, and Firebase service adapters.",
-    "Triage npm audit findings reported by npm ci.",
+    "Triage npm audit findings reported by npm audit.",
     "Document and verify a shadow deployment target.",
     "Implement or delegate the /health route to the hosting layer and verify it after deploy.",
     "Confirm branch protection requires CI before merging to main."
