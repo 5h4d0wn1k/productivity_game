@@ -42,7 +42,7 @@ Warnings:
   above Expo SDK 52's minimum Node 20.18.x requirement.
 - ESLint passes but reports 23 warnings, mostly unused imports and React hook
   dependency warnings.
-- The final PR CI run annotated that Node.js 20 JavaScript actions are being
+- A PR CI run annotated that Node.js 20 JavaScript actions are being
   deprecated on GitHub Actions runners. The workflow now uses Node 24-capable
   action majors for checkout, Node setup, and artifact upload.
 
